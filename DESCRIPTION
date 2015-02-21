@@ -1,11 +1,13 @@
 Package: dispersim
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: Simulating Pollen and Seed Dispersal in Plant Populations
+Version: 0.0.0.9000
 Date: 2015-02-20
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: More about what it does (maybe more than one line)
+Author: person("Luke", "Browne", email = "lukembrowne@gmail.com",
+                  role = c("aut", "cre"))
+Maintainer: Luke Browne <lukembrowne@gmail.com>
+Description: This package simulates how pollen and seed dispersal affects the
+  population and genetic dynamics of populations
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.11.3)
 LinkingTo: Rcpp

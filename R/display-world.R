@@ -10,10 +10,10 @@ plotWorld <- function(world){
    rect(xleft = 0, ybottom = 0, xright = world$x_max, ytop = world$y_max, lty = 2)
    
     # Plot adults
-   with(world$data[world$data$type == "adult", ], 
-        points(pos_x, pos_y, pch = 19))
+   with(world$data[world$data$type == "adult" & world$data$alive == TRUE, ], 
+        points(pos_x, pos_y, pch = 22, cex = 1.25, bg = color))
    
     # Plot seedlings
-   with(world$data[world$data$type == "seedling", ], 
-        points(pos_x, pos_y, pch = 18, cex = .75, col = "green"))
+   with(world$data[world$data$type == "seedling" & world$data$alive == TRUE, ], 
+        points(pos_x, pos_y, pch = 21, cex = .75, bg = color))
 }
