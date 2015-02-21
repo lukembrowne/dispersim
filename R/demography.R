@@ -58,9 +58,17 @@ disperseSeed <- function(data, adult_indices, seedling_indices, crop_size){
 }
 
 # Determine which plants survive
-survival <- function(data){
+survival <- function(data, params){
     # If it's the first generation, skip
   if(counter$step == 0) next
+  
+    # If out of bounds and boundary setting is 'unsuitable', plants die
+      # Could maybe speed up by only looking at plants that are currently alive
+  if(params$boundary_setting == "unsuitable"){
+    data$alive[data$pos_x > params$x_max | data$pos_x < 0] <- FALSE
+    data$alive[data$pos_y > params$y_max | data$pos_y < 0] <- FALSE 
+  }
+    
     
     # Make a vector of whether adults that are currently alive will die
   adult_fate  <- sample(c(TRUE, FALSE), 
