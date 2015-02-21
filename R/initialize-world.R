@@ -27,7 +27,7 @@ initDataFrame <- function(){
   ## Also had date of death and date of birth and loci names in python version
   col_names <- c("id", "type", "alive", "age", "color", "pos_x", "pos_y",
                  "id_mother", "id_father")
-  df <- data.frame(matrix(ncol = length(col_names), nrow = 5000))
+  df <- data.frame(matrix(ncol = length(col_names), nrow = 10000))
   colnames(df) <- col_names
   return(df)
 }
@@ -41,7 +41,7 @@ initAdults <- function(params){
   data$id[1:n_adults] <- 1:n_adults
   data$type[1:n_adults] <- "adult"
   data$alive[1:n_adults] <- TRUE
-  data$age[1:n_adults] <- 0
+  data$age[1:n_adults] <- params$age_at_adult
   data$color[1:n_adults] <- sample(colors(), n_adults)
   
     # Placement of Adults - currently random

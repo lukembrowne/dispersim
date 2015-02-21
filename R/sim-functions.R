@@ -7,13 +7,14 @@ stepForward <- function(data, counter, params, steps = 1){
     counter$step <- counter$step + 1
     data <- survival(data = data)
     data <- reproduce(data = data, counter = counter, crop_size = params$crop_size)
+    data <- increaseAge(data)
+    data <- transitionType(data, params)
+    counter <- updateCounter(data = data, counter = counter)
     registry <<- census(data = data, registry = registry, counter = counter)
-    #generate summary
-    # print status
-    steps <- steps - 1   
+    steps <- steps - 1 
   } 
   
-  counter$step <<- counter$step
+  counter <<- counter
   return(data)
 }        
 
@@ -28,4 +29,9 @@ census <- function(data, registry, counter){
     seedlings_alive = which(data$type == "seedling" & data$alive == TRUE))
   
   return(registry)
+}
+
+updateCounter <- function(data, counter){
+  counter$plant <- min(which(is.na(data$id))) - 1
+  return(counter)  
 }

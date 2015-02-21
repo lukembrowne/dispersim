@@ -22,11 +22,7 @@ reproduce <- function(data, counter, crop_size){
   
     # Seed dispersal process - adds coordinates and mother_id   
     data <- disperseSeed(data, adult_indices, seedling_indices, crop_size)
-  
-  # Increase plant counter
-  # Could add test that last row without NA should also equal where the plant counter is
-  counter$plant <<- counter$plant + n_seedlings
-  
+
   return(data)
 }
 
@@ -61,7 +57,7 @@ disperseSeed <- function(data, adult_indices, seedling_indices, crop_size){
   
 }
 
-
+# Determine which plants survive
 survival <- function(data){
     # If it's the first generation, skip
   if(counter$step == 0) next
@@ -69,18 +65,38 @@ survival <- function(data){
     # Make a vector of whether adults that are currently alive will die
   adult_fate  <- sample(c(TRUE, FALSE), 
                          sum(with(data, alive[type == "adult" & alive == TRUE]),
-                             na.rm = TRUE), replace = TRUE, prob = c(.9, .1))
+                             na.rm = TRUE), replace = TRUE, 
+                        prob = c(params$adult_survival, 1 - params$adult_survival))
+  
   data$alive[with(data, which(type == "adult" & alive == TRUE))] <- adult_fate
   
+    ## Seedling survival
   seedling_fate  <- sample(c(TRUE, FALSE), 
                       sum(with(data, alive[type == "seedling" & alive == TRUE]),
-                             na.rm = TRUE), replace = TRUE, prob = c(.5, .5))
+                             na.rm = TRUE), replace = TRUE, 
+                      prob = c(params$seedling_survival, 1 - params$seedling_survival))
+  
   data$alive[with(data, which(type == "seedling" & alive == TRUE))] <- seedling_fate
  
   return(data)  
 }
 
+# Increase age by one step
+increaseAge <- function(data){
+  alive <- which(data$alive == TRUE)
+  data$age[alive] <- data$age[alive] + 1
+  return(data)
+}
+
+# Transition to higher age class
+transitionType <- function(data, params){
+  data$type[data$type == "seedling" & data$age >= params$age_at_adult] <- "adult"
+  return(data)
+}
 
 
 
-#survival
+
+
+
+
