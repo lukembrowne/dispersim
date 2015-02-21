@@ -1,25 +1,25 @@
 
-initSim <- function(params){
-  
-  foo <- list(x_max = x_max,
-              y_max = y_max,
-              n_adults_init = n_adults_init,
-              plant_counter = 0,
-              step_counter = 1,
-              crop_size = crop_size,
-              seed_kernel_scale = seed_kernel_scale,
-              seed_kernel_shape = seed_kernel_shape,
-              registry = list(),
-              data = initDataFrame())
-  
-  class(foo) <- "world"
-  
-  foo <- makeAdults(foo)
-  foo <- saveIdAlive(foo)
-  
-  return(foo)
-  
-}
+# initSim <- function(params){
+#   
+#   foo <- list(x_max = x_max,
+#               y_max = y_max,
+#               n_adults_init = n_adults_init,
+#               plant_counter = 0,
+#               step_counter = 1,
+#               crop_size = crop_size,
+#               seed_kernel_scale = seed_kernel_scale,
+#               seed_kernel_shape = seed_kernel_shape,
+#               registry = list(),
+#               data = initDataFrame())
+#   
+#   class(foo) <- "world"
+#   
+#   foo <- makeAdults(foo)
+#   foo <- saveIdAlive(foo)
+#   
+#   return(foo)
+#   
+# }
 
 initDataFrame <- function(){
  
@@ -32,25 +32,33 @@ initDataFrame <- function(){
   return(df)
 }
 
-makeAdults <- function(world){
+initAdults <- function(params){
   
-  n_adults <- world$n_adults_init
+  data <- initDataFrame()
+  n_adults <- params$n_adults_init
   
     # Ids always start at 1 and go up for first adults
-  world$data$id[1:n_adults] <- 1:n_adults
-  world$data$type[1:n_adults] <- "adult"
-  world$data$alive[1:n_adults] <- TRUE
-  world$data$age[1:n_adults] <- 0
-  world$data$color[1:n_adults] <- sample(colors(), n_adults)
+  data$id[1:n_adults] <- 1:n_adults
+  data$type[1:n_adults] <- "adult"
+  data$alive[1:n_adults] <- TRUE
+  data$age[1:n_adults] <- 0
+  data$color[1:n_adults] <- sample(colors(), n_adults)
   
     # Placement of Adults - currently random
-  world$data$pos_x[1:n_adults] <- runif(n = n_adults, min = 0, max = world$x_max)
-  world$data$pos_y[1:n_adults] <- runif(n = n_adults, min = 0, max = world$y_max)  
+  data$pos_x[1:n_adults] <- runif(n = n_adults, min = 0, max = params$x_max)
+  data$pos_y[1:n_adults] <- runif(n = n_adults, min = 0, max = params$y_max)  
   
   # Update plant counter
-  world$plant_counter <- n_adults
+  counter <<- initCounter()
+  counter$plant <<- n_adults
   
-  return(world)
+  return(data)
+}
+
+  # Counter keeps track of things like what generation we are on, 
+# how many plants have been created
+initCounter <- function(){
+  return(list(plant = 0, step = 1))
 }
 
 

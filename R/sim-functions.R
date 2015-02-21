@@ -1,25 +1,31 @@
 
 
 ## Move forward x generations
-stepGeneration <- function(world, steps = 1){
+stepForward <- function(data, counter, params, steps = 1){
   while(steps > 0){
     
-    world$step_counter <- world$step_counter + 1
-    world <- survival(world)
-    world <- reproduce(world)
-    world <- saveIdAlive(world)
+    counter$step <- counter$step + 1
+    data <- survival(data = data)
+    data <- reproduce(data = data, counter = counter, crop_size = params$crop_size)
+    registry <<- census(data = data, registry = registry, counter = counter)
     #generate summary
     # print status
-    steps <- steps - 1 
-
-      
+    steps <- steps - 1   
   } 
-  return(world)
+  
+  counter$step <<- counter$step
+  return(data)
 }        
 
-saveIdAlive <- function(world){
-  world$registry[[world$step_counter]] <- list(
-    adults_alive = which(world$data$type == "adult" & world$data$alive == TRUE),
-    seedlings_alive = which(world$data$type == "seedling" & world$data$alive == TRUE))
-  return(world)
+
+## Saves IDs of all individuals that are alive - to be used with summary function
+census <- function(data, registry, counter){
+  
+  if(!exists("registry")) registry <- list()
+
+  registry[[counter$step]] <- list(
+    adults_alive = which(data$type == "adult" & data$alive == TRUE),
+    seedlings_alive = which(data$type == "seedling" & data$alive == TRUE))
+  
+  return(registry)
 }
