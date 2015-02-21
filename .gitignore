@@ -5,3 +5,5 @@ src/*.o
 src/*.so
 src/*.dll
 dispersim.Rproj
+playground.R
+Todo.txt
