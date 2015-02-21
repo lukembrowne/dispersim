@@ -15,7 +15,7 @@ generateSummary <- function(registry){
   summary_df <- data.frame(generation = 1:counter$step, 
                            n_adults_alive = adults_alive,
                            n_seedlings_alive = seedlings_alive)
-  
+  plotSummary(summary_df)
   return(summary_df)
 }
 

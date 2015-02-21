@@ -19,3 +19,20 @@ plotWorld <- function(data, params){
    with(alive[alive$type == "seedling", ], 
         points(pos_x, pos_y, pch = 21, cex = .75, bg = color))
 }
+
+plotSummary <- function(summary_df){
+  
+  old_par <- par("mfrow", "mar")
+  
+  par(mfrow = c(2,1), mar = c(3.1, 3, 2, 1))
+    # Plot adult population size
+  plot(summary_df$generation, summary_df$n_adults_alive, type = "l", lwd = 2,
+       las = 1, main = "Adults", ylab = "", xlab = "", 
+       ylim = c(0, max(summary_df$n_adults_alive)))
+    # Plot seedling population size
+  plot(summary_df$generation, summary_df$n_seedlings_alive, type = "l", lwd = 2,
+       las = 1, main = "Seedlings", ylab = "", xlab = "Steps")
+ 
+    # Reset par settings
+  on.exit(par(old_par))
+}

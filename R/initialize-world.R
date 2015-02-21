@@ -1,25 +1,4 @@
 
-# initSim <- function(params){
-#   
-#   foo <- list(x_max = x_max,
-#               y_max = y_max,
-#               n_adults_init = n_adults_init,
-#               plant_counter = 0,
-#               step_counter = 1,
-#               crop_size = crop_size,
-#               seed_kernel_scale = seed_kernel_scale,
-#               seed_kernel_shape = seed_kernel_shape,
-#               registry = list(),
-#               data = initDataFrame())
-#   
-#   class(foo) <- "world"
-#   
-#   foo <- makeAdults(foo)
-#   foo <- saveIdAlive(foo)
-#   
-#   return(foo)
-#   
-# }
 
 initDataFrame <- function(){
  
