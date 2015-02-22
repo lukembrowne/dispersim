@@ -1,3 +1,5 @@
+
+  # Plot simulation world
 plotWorld <- function(data, params){
   
     # Initialize plot
@@ -20,6 +22,7 @@ plotWorld <- function(data, params){
         points(pos_x, pos_y, pch = 21, cex = .75, bg = color))
 }
 
+  # Plot summary data of population sizes
 plotSummary <- function(summary_df){
   
   old_par <- par("mfrow", "mar")
@@ -36,3 +39,26 @@ plotSummary <- function(summary_df){
     # Reset par settings
   on.exit(par(old_par))
 }
+
+  # Plot dispersal kernels
+
+plotKernels <- function(data, params){
+  
+  dat <- data.frame(seed_obs = calcSeedDispDistance(data),
+                    pollen_obs = calcPollenDispDistance(data),
+                    pollen_eff_obs = calcEffectivePollenDispDistance(data)
+                    )
+  dat$seed_kernel <- rweibull(dim(dat)[1], shape = params$seed_kernel_shape,
+                              scale = params$seed_kernel_scale)
+  
+  dat$pollen_kernel <- rweibull(dim(dat)[1], shape = params$pollen_kernel_shape,
+                                scale = params$pollen_kernel_scale)
+  
+  dat_melt <- melt(dat)
+  
+  ggplot(dat_melt, aes(x = value, fill = variable)) +
+    geom_density(alpha = .2)
+}
+
+
+
