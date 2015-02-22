@@ -57,7 +57,9 @@ plotKernels <- function(data, params){
   dat_melt <- melt(dat)
   
   ggplot(dat_melt, aes(x = value, fill = variable)) +
-    geom_density(alpha = .2)
+    geom_density(alpha = .2) +
+    labs(x = "Distance", y = "") + 
+    theme(legend.title=element_blank())
 }
 
 
