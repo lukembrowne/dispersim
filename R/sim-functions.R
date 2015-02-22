@@ -6,7 +6,7 @@ stepForward <- function(data, counter, params, steps = 1){
     
     counter$step <- counter$step + 1
     data <- survival(data = data, params)
-    data <- reproduce(data = data, counter = counter, crop_size = params$crop_size)
+    data <- reproduce(data = data, counter = counter, params = params)
     data <- increaseAge(data)
     data <- transitionType(data, params)
     counter <- updateCounter(data = data, counter = counter)
