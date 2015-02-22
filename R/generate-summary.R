@@ -1,6 +1,4 @@
 ### Generate summary of data
-
-
 generateSummary <- function(registry){
   
   ## returns dataframe
@@ -18,4 +16,5 @@ generateSummary <- function(registry){
   plotSummary(summary_df)
   return(summary_df)
 }
+
 
