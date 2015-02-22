@@ -19,11 +19,17 @@ makeLociNames <- function(n_loci){
 
 # Small function that takes genotypes of mom and dad and creates a new genotype
 # for offspring
-breed <- function(data, params, seedling_ids){
-# Issue here that it can't assign genotypes to seedlings of adults that recruited into the population - need to make the function recursive?
+breed <- function(data, params, counter){
+# Issue here that it can't assign genotypes to offsprings of adults that recruited into the population - need to make the function recursive?
+  
+    where_na <- which(apply(data[1:counter$plant, params$loci_names], 1, anyNA))
+  
+    offspring_ids <- data$id[where_na]
+    
+  
       # Subset out ids of mothers and fathers
-    id_mother <- data$id_mother[seedling_ids]
-    id_father <- data$id_father[seedling_ids]
+    id_mother <- data$id_mother[offspring_ids]
+    id_father <- data$id_father[offspring_ids]
     
     # Choose one allele from each maternal and paternal genotype to pass on
   mom_haploid <- t(apply(data[id_mother, params$loci_names], 1, 
@@ -32,10 +38,15 @@ breed <- function(data, params, seedling_ids){
                        function(x) '['(x, chooseAllele(params) )))
   
     # Fill in genotypes for offspring
-  fill <- data[seedling_ids, params$loci_names]
+  fill <- data[offspring_ids, params$loci_names]
   fill[, seq(1, params$n_loci * 2, by = 2)] <- mom_haploid
   fill[, seq(2, params$n_loci * 2, by = 2)] <- dad_haploid
-  data[seedling_ids, params$loci_names] <- fill
+  data[offspring_ids, params$loci_names] <- fill
+  
+    # If there are any plants left that don't have a genotype, breed again!
+  if(any(apply(data[1:counter$plant, params$loci_names], 1, anyNA))){
+    data <- breed(data, params, counter)
+  }
   
   return(data)
 }
