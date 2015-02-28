@@ -79,23 +79,77 @@ calcAlleleFreq <- function(alleles_1, alleles_2 = NULL){
 ## Formula from Nei 1987 that works well with both haploid and diploid data
 calcHe <- function(alleles_1, alleles_2 = NULL){
     
-    # Get rid of NAs in case they are there
-  alleles <- c(alleles_1, alleles_2)
-  alleles <- na.omit(alleles)
-  
     # Used in correcting for bias in small sample sizes
     # Will set ploidy_multiplier to 2 if diploid genotypes are passed to function
   ploidy_multiplier <- ifelse(length(alleles_2 > 0), 2, 1)
   
     # Calc number of samples and allele frequencie
-  n_samples <- length(alleles_1)
-  freq <- calcAlleleFreq(alleles)
+  n_samples <- length(na.omit(alleles_1))
+  freq <- calcAlleleFreq(alleles_1, alleles_2)
   
     # Formula for unbiased gene diversity from Nei 1987
   he <- ((ploidy_multiplier * n_samples) / (ploidy_multiplier * n_samples - 1)) *
     (1 - sum(freq^2))
   
   return(he)
+}
+
+## Calculate He across loci
+
+calcHeAvg <- function(data, params){
+        # Could speed up by setting this outside the function somewhere
+  loci_names_single <- params$loci_names[grepl("_1", params$loci_names)]
+  
+    # Init holder to hold he values for each locus
+  he_holder <- rep(NA, length(loci_names_single))
+    # Loop through and calc He for each locus, then average across loci
+  i <- 1
+  for(locus in loci_names_single){
+    dip_gen <- getDiploidGenotype(data, locus_name = locus)
+    he_holder[i] <- calcHe(dip_gen)
+    i <- i + 1
+  }
+  return(mean(he_holder))
+}
+
+
+# Function to return full diploid genotype given only the locus name
+# Give just the locus name without the underscore
+# Returns a vector of alleles
+getDiploidGenotype <- function(data, locus_name, mode = "conc", sep = "-"){
+  
+  if(!is.character(locus_name)){
+    stop("Locus name must be formatted as string")
+  }
+  
+  if(!locus_name %in% names(data)){
+    stop("Name of locus not found in data")
+  }
+  
+  # Find column index for locus, and also next locus that contains 2nd half 
+  # of diploid data
+  first_col_index <- grep(locus_name, names(data))
+  second_col_index <- first_col_index + 1
+  
+  if(length(first_col_index) > 1){
+    stop("More than one locus found with that name.. please be more specific")
+  }
+  
+  if(mode == "conc"){
+     
+    alleles <- c(data[, first_col_index], data[, second_col_index])
+    
+    return(alleles)
+  }
+
+  # Add ability to paste the two genotypes together for output in spagedi program
+  # Note that this returns a string instead of a numeric
+  if(mode == "paste"){
+    
+    alleles_pasted <- paste(data[, first_col_index], data[, second_col_index],
+                            sep = sep)
+    return(alleles_pasted)
+  }
 }
 
 
