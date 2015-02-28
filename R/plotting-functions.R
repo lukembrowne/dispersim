@@ -23,24 +23,38 @@ plotWorld <- function(data, params){
 }
 
   # Plot summary data of population sizes
-plotSummary <- function(summary_df){
+plotSummary <- function(summary_df, data, params){
   
   old_par <- par("mfrow", "mar")
   
-  par(mfrow = c(2,1), mar = c(3.1, 3, 2, 1))
+    # Set colors
+  adult_col <- "grey4"
+  seedling_col <- "red"
+  
+  par(mfrow = c(2,2), mar = c(3.1, 4, 2, 1))
     # Plot adult population size
   plot(summary_df$generation, summary_df$n_adults_alive, type = "l", lwd = 2,
-       las = 1, main = "Adults", ylab = "", xlab = "", 
+       las = 1, main = "Adults", ylab = "N", xlab = "", col = adult_col,
        ylim = c(0, max(summary_df$n_adults_alive)))
     # Plot seedling population size
   plot(summary_df$generation, summary_df$n_seedlings_alive, type = "l", lwd = 2,
-       las = 1, main = "Seedlings", ylab = "", xlab = "Steps")
- 
+       las = 1, main = "Seedlings", ylab = "", xlab = "Steps", col = seedling_col)
+  
+    # Plot He
+  plot(summary_df$generation, summary_df$he_adults_alive, type = "l", lwd = 2,
+       las = 1, ylab = "He", xlab = "", main = "He",
+       ylim = c(0, 1), col = adult_col)
+  lines(summary_df$generation, summary_df$he_seedlings_alive, type = "l", lwd = 2,
+        col = seedling_col)
+
+  plotWorld(data, params)
     # Reset par settings
   on.exit(par(old_par))
 }
 
-  # Plot dispersal kernels
+
+
+# Plot dispersal kernels
 
 plotKernels <- function(data, params){
   
@@ -54,12 +68,12 @@ plotKernels <- function(data, params){
   dat$pollen_kernel <- rweibull(dim(dat)[1], shape = params$pollen_kernel_shape,
                                 scale = params$pollen_kernel_scale)
   
-  dat_melt <- melt(dat)
+  dat_melt <- reshape2::melt(dat)
   
-  ggplot(dat_melt, aes(x = value, fill = variable)) +
-    geom_density(alpha = .2) +
-    labs(x = "Distance", y = "") + 
-    theme(legend.title=element_blank())
+  ggplot2::ggplot(dat_melt, ggplot2::aes(x = value, fill = variable)) +
+    ggplot2::geom_density(alpha = .2) +
+    ggplot2::labs(x = "Distance", y = "") + 
+    ggplot2::theme(legend.title=  ggplot2::element_blank())
 }
 
 
