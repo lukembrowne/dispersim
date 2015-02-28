@@ -86,22 +86,44 @@ updateCounter <- function(data, counter){
 
 
 
-### Generate summary of data
-generateSummary <- function(registry){
+### Generate summary of demographic and genetic data
+generateSummary <- function(registry, data, params){
   
-  ## returns dataframe
-  
-  # Get pop sizes by look at lenght of registry for each class
+    # Get pop sizes by look at length of registry for each class
   pop_sizes <- unlist(lapply(registry, FUN = function(x) lapply(x, length)))
   
-  # Subsetting named vector of pop sizes
+    # Subsetting named vector of pop sizes
   adults_alive <- pop_sizes[which(names(pop_sizes) == "adults_alive")]
   seedlings_alive <- pop_sizes[which(names(pop_sizes) == "seedlings_alive")]
   
+    # Calculate He per generation for adults
+  he_adults_alive <- rep(NA, length(registry))
+      i <- 1
+    for(gen in 1:length(registry)){
+    he_adults_alive[i] <- calcHeAvg(data = data[unlist(registry[[gen]][1]), ],
+                                    params = params)
+    i <- i + 1
+    }
+      
+    # Calculate He per generation for seedlings
+  he_seedlings_alive <- rep(NA, length(registry))
+    i <- 1
+    for(gen in 1:length(registry)){
+      he_seedlings_alive[i] <- calcHeAvg(data = data[unlist(registry[[gen]][2]), ],
+                                      params = params)
+      i <- i + 1
+    }
+
+    # Put together all information into a data frame
   summary_df <- data.frame(generation = 1:counter$step, 
                            n_adults_alive = adults_alive,
-                           n_seedlings_alive = seedlings_alive)
+                           n_seedlings_alive = seedlings_alive,
+                           he_adults_alive = he_adults_alive,
+                           he_seedlings_alive = he_seedlings_alive
+                           )
+     # Plot summary data                  
   plotSummary(summary_df)
+  
   return(summary_df)
 }
 
