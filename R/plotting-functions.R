@@ -1,17 +1,19 @@
 
   # Plot simulation world
-plotWorld <- function(data, params){
+plotSim <- function(sim){
   
     # Initialize plot
    plot(0, type = 'n', asp = 1,
         pch = 19, xlab = "", ylab = "", las = 1, 
-        xlim = c(0, params$x_max), ylim = c(0, params$y_max),
+        xlim = c(0, sim$params$x_max), ylim = c(0, sim$params$y_max),
         )
    
     # Draw border of study area
-   rect(xleft = 0, ybottom = 0, xright = params$x_max, ytop = params$y_max, lty = 2)
+   rect(xleft = 0, ybottom = 0, xright = sim$params$x_max, 
+        ytop = sim$params$y_max, lty = 2)
    
-   alive <- subset(data, data$alive == TRUE)
+   alive <- subset(sim$data, sim$data$alive == TRUE,
+                   select = c("type", "color", "pos_x", "pos_y"))
    
     # Plot adults
    with(alive[alive$type == "adult", ], 
