@@ -4,6 +4,11 @@ isPositiveInteger <- function(number){
 }
 
 
+# Calculate distance between two points
+calcDist <- function(x1, x2, y1, y2){
+  sqrt((x2 - x1)^2 + (y2 - y1)^2)
+}
+
 # Function to check that parameters are within expected ranges
 checkParams <- function(params){
   

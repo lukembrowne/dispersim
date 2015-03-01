@@ -2,9 +2,11 @@
 # Define sim class - using reference class OOP system
 createSimObject <- setRefClass(Class = "Sim",
             fields = list(data = "data.frame",
+                          summary = "data.frame",
                           params = "list",
                           registry = "list",
-                          counter = "list")
+                          counter = "list"
+                          )
             )
 
 # Create a new simulation object and initialize it
@@ -71,7 +73,7 @@ initRegistry <- function(sim){
 
 ## Move forward x generations
 runSim <- function(sim, steps = 1){
-  cat("Beginning simulation...", steps, "total steps")
+  cat("Beginning simulation...", steps, "total steps \n")
   steps_remaining <- steps
   
   while(steps_remaining > 0){
@@ -84,8 +86,10 @@ runSim <- function(sim, steps = 1){
     chooseGenotypesForOffspring(sim)
     procCensus(sim)
     steps_remaining <- steps_remaining - 1
-    cat((1 - steps_remaining / steps) * 100, "% complete \n ")
+    cat(signif((1 - steps_remaining / steps) * 100, 2), "% complete \n ")
   } 
+  cat("Updating summary... \n")
+  updateSummary(sim)
   cat("--- Simulation complete! ---")
 }        
 
@@ -108,7 +112,7 @@ updateCounter <- function(sim){
 
 
 ### Generate summary of demographic and genetic data
-generateSummary <- function(sim){
+updateSummary <- function(sim){
   
     # Get pop sizes by look at length of registry for each class
   pop_sizes <- unlist(lapply(sim$registry, FUN = function(x) lapply(x, length)))
@@ -142,10 +146,12 @@ generateSummary <- function(sim){
                            he_adults_alive = he_adults_alive,
                            he_seedlings_alive = he_seedlings_alive
                            )
-     # Plot summary data                  
- # plotSummary(summary_df, data, params)
+  sim$summary <- summary_df 
   
-  return(summary_df)
+    # Plot summary data                  
+  plotSummary(sim)
+  
+
 }
 
 

@@ -55,41 +55,31 @@ dispersePollen <- function(sim, adult_indices, seedling_indices){
 }
 
 
-
-
-
-
-
-
-
-# Calculate distance between two points
-calcDist <- function(x1, x2, y1, y2){
-  sqrt((x2 - x1)^2 + (y2 - y1)^2)
-}
-
 ## Calculate seed dispersal distance
 # Distance from seedling to mother
 
-calcSeedDispDistance <- function(data){
+calcSeedDispDistance <- function(sim){
   
-  recruits <- data[!is.na(data$id_mother), ]
+  recruits <- sim$data[!is.na(sim$data$id_mother), ]
   
-  disp_dist <- calcDist(x1 = recruits$pos_x, x2 = data$pos_x[recruits$id_mother],
-                        y1 = recruits$pos_y, y2 = data$pos_y[recruits$id_mother])
+  disp_dist <- calcDist(x1 = recruits$pos_x, 
+                       x2 = sim$data$pos_x[recruits$id_mother],
+                       y1 = recruits$pos_y, 
+                       y2 = sim$data$pos_y[recruits$id_mother])
   
   return(disp_dist)  # Returns vector of distances 
 }
 
 # Calculate pollen dispersal distance
 # Distance from mother to father
-calcPollenDispDistance <- function(data){
+calcPollenDispDistance <- function(sim){
   
-  recruits <- data[!is.na(data$id_father), ]
+  recruits <- sim$data[!is.na(sim$data$id_father), ]
   
-  disp_dist <- calcDist(x1 = data$pos_x[recruits$id_father], 
-                        x2 = data$pos_x[recruits$id_mother],
-                        y1 = data$pos_y[recruits$id_father], 
-                        y2 = data$pos_y[recruits$id_mother])
+  disp_dist <- calcDist(x1 = sim$data$pos_x[recruits$id_father], 
+                        x2 = sim$data$pos_x[recruits$id_mother],
+                        y1 = sim$data$pos_y[recruits$id_father], 
+                        y2 = sim$data$pos_y[recruits$id_mother])
   
   return(disp_dist)  # Returns vector of distances 
 }
@@ -98,14 +88,14 @@ calcPollenDispDistance <- function(data){
 
 # Calculate 'effective' pollen dispersal distance -
 # Distance from seedling to father
-calcEffectivePollenDispDistance <- function(data){
+calcEffectivePollenDispDistance <- function(sim){
   
-  recruits <- data[!is.na(data$id_father), ]
+  recruits <- sim$data[!is.na(sim$data$id_father), ]
   
   disp_dist <- calcDist(x1 = recruits$pos_x, 
-                        x2 = data$pos_x[recruits$id_father],
+                        x2 = sim$data$pos_x[recruits$id_father],
                         y1 = recruits$pos_y, 
-                        y2 = data$pos_y[recruits$id_father])
+                        y2 = sim$data$pos_y[recruits$id_father])
   
   return(disp_dist)  # Returns vector of distances 
 }
