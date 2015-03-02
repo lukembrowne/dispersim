@@ -29,7 +29,8 @@ initDataFrame <- function(sim){
   ## Also had date of death and date of birth and loci names in python version
   col_names <- c("id", "type", "alive", "age", "color", "pos_x", "pos_y",
                  "id_mother", "id_father", sim$params$loci_names)
-  df <- data.frame(matrix(ncol = length(col_names), nrow = 10000))
+  df <- data.frame(matrix(ncol = length(col_names), 
+                          nrow = sim$params$expected_total_individuals))
   colnames(df) <- col_names
   sim$data <- df
   return(cat("Data frame initialized...\n"))

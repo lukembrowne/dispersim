@@ -1,6 +1,6 @@
 
   # Plot simulation world
-plotSim <- function(sim){
+plotSim <- function(sim, trace_pollen = FALSE){
   
     # Initialize plot
    plot(0, type = 'n', asp = 1,
@@ -13,15 +13,46 @@ plotSim <- function(sim){
         ytop = sim$params$y_max, lty = 2)
    
    alive <- subset(sim$data, sim$data$alive == TRUE,
-                   select = c("type", "color", "pos_x", "pos_y"))
-   
-    # Plot adults
-   with(alive[alive$type == "adult", ], 
-        points(pos_x, pos_y, pch = 22, cex = 1.25, bg = color))
+                   select = c("id", "type", "color", "pos_x", "pos_y",
+                              "id_mother", "id_father"))
    
     # Plot seedlings
    with(alive[alive$type == "seedling", ], 
         points(pos_x, pos_y, pch = 21, cex = .75, bg = color))
+   
+   # Plot adults
+   with(alive[alive$type == "adult", ], 
+        points(pos_x, pos_y, pch = 22, cex = 1.25, bg = color))
+   
+    # Plot arrows connecting offspring to parents
+   if(trace_pollen == TRUE){
+     n_to_sample = 5 # show pollen traces for 5 adults
+     sub_sample_indices <- sample(unique(alive$id_father[alive$type == "seedling"]),
+                                  n_to_sample)
+      # Arrow from father to mother
+     with(alive[alive$id_mother %in% sub_sample_indices, ],
+        arrows(x0 = sim$data$pos_x[id_father],
+               y0 = sim$data$pos_y[id_father],
+               x1 = sim$data$pos_x[id_mother],
+               y1 = sim$data$pos_y[id_mother],
+               lwd = 1.5,
+               angle = 30,
+               length = .1,
+               col = sim$data$color[id_father])
+     )
+      # Arrow from mother to seedling
+     with(alive[alive$id_mother %in% sub_sample_indices, ],
+          arrows(x0 = sim$data$pos_x[id_mother],
+                 y0 = sim$data$pos_y[id_mother],
+                 x1 = pos_x,
+                 y1 = pos_y,
+                 lwd = 1.5,
+                 angle = 30,
+                 length = .1,
+                 lty = 2,
+                 col = sim$data$color[id_father])
+     )
+   }
 }
 
   # Plot summary data
