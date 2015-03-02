@@ -40,8 +40,9 @@ dispersePollen <- function(sim, adult_indices, seedling_indices){
   
   # Calculate probabilty of fertilization based on dispersal kernel
   # Choose pollen donor based on the probability of fertilization  
-  prob_mat <- pweibull(dist_mat[], shape = sim$params$pollen_kernel_shape,
-                       scale = sim$params$pollen_kernel_scale)
+  prob_mat <- 1 - pweibull(dist_mat[], shape = sim$params$pollen_kernel_shape,
+                       scale = sim$params$pollen_kernel_scale
+                       )
   
   # Arranged as matrix with columns as mothers, rows as pollen donors
   pollen_donors <- apply(prob_mat, 1, function(x){
