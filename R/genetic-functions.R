@@ -140,6 +140,36 @@ getDiploidGenotype <- function(data_subset, locus_name, sep = "-"){
 }
 
 
+## Calculate sp across steps
+
+runSpagediAnalysis <- function(sim){
+  
+  for(step in 1:sim$counter$step){
+    
+    writeSpagedi(sim, type =  "adult", step = step, 
+                 file_name =  paste("./temp/adult_", step,".txt", sep = ""), 
+                 dist_int = seq(10, sim$params$x_max, by = 10))
+    
+    runSpagedi(directory_path = "./temp/", 
+               input_file_name =  paste("adult_", step,".txt", sep = ""),
+               output_file_name = paste("adult_out_", step,".txt", sep = ""), 
+               categories_present = FALSE, perm = FALSE)
+    
+    if(step == 1) {next} # Since there are no seedlings in first step.. skip loop
+      writeSpagedi(sim, type =  "seedling", step = step, 
+                   file_name =  paste("./temp/seedling_", step,".txt", sep = ""), 
+                   dist_int = seq(10, sim$params$x_max, by = 10))
+      
+      runSpagedi(directory_path = "./temp/", 
+                 input_file_name =  paste("seedling_", step,".txt", sep = ""),
+                 output_file_name = paste("seedling_out_", step,".txt", sep = ""), 
+                 categories_present = FALSE, perm = FALSE)
+    cat("Processing step...", step, "\n")
+  }
+  
+}
+
+
 
 
 
