@@ -1,6 +1,6 @@
 
   # Plot simulation world
-plotSim <- function(sim, trace_pollen = FALSE){
+plotSim <- function(sim, step = sim$counter$step, alpha_value = 1){
   
     # Initialize plot
    plot(0, type = 'n', asp = 1,
@@ -12,47 +12,19 @@ plotSim <- function(sim, trace_pollen = FALSE){
    rect(xleft = 0, ybottom = 0, xright = sim$params$x_max, 
         ytop = sim$params$y_max, lty = 2)
    
-   alive <- subset(sim$data, sim$data$alive == TRUE,
-                   select = c("id", "type", "color", "pos_x", "pos_y",
-                              "id_mother", "id_father"))
+    # Subset alive seedlings and adults
+   adults_alive <- sim$data[sim$registry[[step]][[1]], ]
+   seedlings_alive <- sim$data[sim$registry[[step]][[2]], ]
    
-    # Plot seedlings
-   with(alive[alive$type == "seedling", ], 
-        points(pos_x, pos_y, pch = 21, cex = .75, bg = color))
+    # Plot seedlings, 
+    points(seedlings_alive$pos_x, seedlings_alive$pos_y, pch = 21, cex = .75,
+            bg = scales::alpha(seedlings_alive$color, alpha_value),
+            col = "grey4")
    
    # Plot adults
-   with(alive[alive$type == "adult", ], 
-        points(pos_x, pos_y, pch = 22, cex = 1.25, bg = color))
-   
-    # Plot arrows connecting offspring to parents
-   if(trace_pollen == TRUE){
-     n_to_sample = 5 # show pollen traces for 5 adults
-     sub_sample_indices <- sample(unique(alive$id_father[alive$type == "seedling"]),
-                                  n_to_sample)
-      # Arrow from father to mother
-     with(alive[alive$id_mother %in% sub_sample_indices, ],
-        arrows(x0 = sim$data$pos_x[id_father],
-               y0 = sim$data$pos_y[id_father],
-               x1 = sim$data$pos_x[id_mother],
-               y1 = sim$data$pos_y[id_mother],
-               lwd = 1.5,
-               angle = 30,
-               length = .1,
-               col = sim$data$color[id_father])
-     )
-      # Arrow from mother to seedling
-     with(alive[alive$id_mother %in% sub_sample_indices, ],
-          arrows(x0 = sim$data$pos_x[id_mother],
-                 y0 = sim$data$pos_y[id_mother],
-                 x1 = pos_x,
-                 y1 = pos_y,
-                 lwd = 1.5,
-                 angle = 30,
-                 length = .1,
-                 lty = 2,
-                 col = sim$data$color[id_father])
-     )
-   }
+    points(adults_alive$pos_x, adults_alive$pos_y, pch = 22, cex = 1.25, 
+           bg = scales::alpha(adults_alive$color, 1),
+           col = "grey4")
 }
 
   # Plot summary data
@@ -108,5 +80,40 @@ plotKernels <- function(sim){
     ggplot2::theme(legend.title=  ggplot2::element_blank())
 }
 
+
+
+plotPollenTrace <- function(sim, step = sim$counter$step, alpha_value = 0.25){
+  
+  plotSim(sim, step = step, alpha_value = alpha_value)
+  
+  
+  # Plot arrows connecting offspring to parents
+
+      # Choose a random adult that has successfully pollinated
+    id_father <- sample(na.omit(unique(sim$data$id_father)), 1)
+    id_seedlings <- sim$data$id[sim$data$id_father %in% id_father]
+    id_mother <- sim$data$id_mother[id_seedlings]
+    
+      # Arrow from father to mother
+     arrows(x0 = sim$data$pos_x[id_father],
+            y0 = sim$data$pos_y[id_father],
+            x1 = sim$data$pos_x[id_mother],
+            y1 = sim$data$pos_y[id_mother],
+            lwd = 1.5,
+            angle = 30,
+            length = .1,
+            col = sim$data$color[id_father])
+
+        # Arrow from mother to seedling
+     arrows(x0 = sim$data$pos_x[id_mother],
+            y0 = sim$data$pos_y[id_mother],
+            x1 = sim$data$pos_x[id_seedlings],
+            y1 = sim$data$pos_y[id_seedlings],
+            lwd = 1.5,
+            angle = 30,
+            length = .1,
+            lty = 2,
+            col = sim$data$color[id_father])
+}
 
 
