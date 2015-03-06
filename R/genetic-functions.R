@@ -61,7 +61,7 @@ chooseAllele <- function(sim){
 }
 
 ## Calculate allele frequencies
-# If diploid, give two lists of alleles
+# Returns a named numeric vector
 calcAlleleFreq <- function(alleles_1, alleles_2 = NULL){
   
     # Get rid of NAs in case they are there
@@ -70,6 +70,7 @@ calcAlleleFreq <- function(alleles_1, alleles_2 = NULL){
   
     # Sum number of instances per allele and divide by total length
   freq <- as.numeric(table(alleles) / length(alleles))
+  names(freq) <- names(table(alleles))
   return(freq)
 }
 
@@ -114,7 +115,7 @@ calcHeAvg <- function(sim, data_subset){
 # Function to return full diploid genotype given only the locus name
 # Give just the locus name without the underscore
 # Returns a vector of alleles
-getDiploidGenotype <- function(data_subset, locus_name, mode = "conc", sep = "-"){
+getDiploidGenotype <- function(data_subset, locus_name, sep = "-"){
   
   if(!is.character(locus_name)){
     stop("Locus name must be formatted as string")
@@ -133,23 +134,11 @@ getDiploidGenotype <- function(data_subset, locus_name, mode = "conc", sep = "-"
     stop("More than one locus found with that name.. please be more specific")
   }
   
-  if(mode == "conc"){
-     
-    alleles <- c(data_subset[, first_col_index], data_subset[, second_col_index])
+  alleles <- c(data_subset[, first_col_index], data_subset[, second_col_index])
     
-    return(alleles)
-  }
-
-  # Add ability to paste the two genotypes together for output in spagedi program
-  # Note that this returns a string instead of a numeric
-  if(mode == "paste"){
-    
-    alleles_pasted <- paste(data_subset[, first_col_index], 
-                            data_subset[, second_col_index],
-                            sep = sep)
-    return(alleles_pasted)
-  }
+  return(alleles)
 }
+
 
 
 

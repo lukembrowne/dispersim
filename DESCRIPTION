@@ -12,6 +12,9 @@ License: GPL (>= 2)
 Imports: 
   Rcpp (>= 0.11.3),
   ggplot2 (>= 1.0.0),
-  reshape2 (>= 1.4.0)
+  reshape2 (>= 1.4.0),
+  colorRamps,
+  scales,
+  rSpagedi
 LinkingTo: Rcpp
 Suggests: testthat

@@ -1,3 +1,5 @@
 useDynLib(dispersim)
 exportPattern("^[[:alpha:]]+")
+exportPattern("^[^\\.]") 
 importFrom(Rcpp, evalCpp)
+
