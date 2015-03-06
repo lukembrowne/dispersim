@@ -13,7 +13,7 @@ createSimObject <- setRefClass(Class = "Sim",
 initSim <- function(params){
   sim <- createSimObject$new(params = params)
   
-  checkParams(sim$params)
+  .checkParams(sim$params)
   initDataFrame(sim)
   initCounter(sim)
   initRegistry(sim)
@@ -46,7 +46,7 @@ initAdults <- function(sim){
   sim$data$type[1:n_adults] <- "adult"
   sim$data$alive[1:n_adults] <- TRUE
   sim$data$age[1:n_adults] <- sim$params$age_at_adult
-  sim$data$color[1:n_adults] <- sample(colors(), n_adults)
+  sim$data$color[1:n_adults] <- sample(colorRamps::primary.colors(n_adults), n_adults)
   
   # Placement of Adults - currently random
   sim$data$pos_x[1:n_adults] <- runif(n = n_adults, min = 0, max = sim$params$x_max)

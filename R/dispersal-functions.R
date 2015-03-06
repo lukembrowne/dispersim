@@ -63,7 +63,7 @@ calcSeedDispDistance <- function(sim){
   
   recruits <- sim$data[!is.na(sim$data$id_mother), ]
   
-  disp_dist <- calcDist(x1 = recruits$pos_x, 
+  disp_dist <- .calcDist(x1 = recruits$pos_x, 
                        x2 = sim$data$pos_x[recruits$id_mother],
                        y1 = recruits$pos_y, 
                        y2 = sim$data$pos_y[recruits$id_mother])
@@ -77,7 +77,7 @@ calcPollenDispDistance <- function(sim){
   
   recruits <- sim$data[!is.na(sim$data$id_father), ]
   
-  disp_dist <- calcDist(x1 = sim$data$pos_x[recruits$id_father], 
+  disp_dist <- .calcDist(x1 = sim$data$pos_x[recruits$id_father], 
                         x2 = sim$data$pos_x[recruits$id_mother],
                         y1 = sim$data$pos_y[recruits$id_father], 
                         y2 = sim$data$pos_y[recruits$id_mother])
@@ -93,7 +93,7 @@ calcEffectivePollenDispDistance <- function(sim){
   
   recruits <- sim$data[!is.na(sim$data$id_father), ]
   
-  disp_dist <- calcDist(x1 = recruits$pos_x, 
+  disp_dist <- .calcDist(x1 = recruits$pos_x, 
                         x2 = sim$data$pos_x[recruits$id_father],
                         y1 = recruits$pos_y, 
                         y2 = sim$data$pos_y[recruits$id_father])

@@ -2,10 +2,10 @@ library(dispersim)
 context("Genetic calculations")
 
 test_that("calcAlleleFreq returns proper values", {
-  expect_equal(calcAlleleFreq(c(1,1,1)), 1)
-  expect_equal(calcAlleleFreq(c(1,1,2,2)), c(0.5, 0.5))
-  expect_equal(calcAlleleFreq(c(1,1,2,2), c(1,1,2,2)), c(0.5, 0.5))
-  expect_equal(calcAlleleFreq(c(1,1,2,2, NA), c(1,1,2,2, NA)), c(0.5, 0.5))
+  expect_equal(as.numeric(calcAlleleFreq(c(1,1,1))), 1)
+  expect_equal(as.numeric(calcAlleleFreq(c(1,1,2,2))), c(0.5, 0.5))
+  expect_equal(as.numeric(calcAlleleFreq(c(1,1,2,2)), c(1,1,2,2)), c(0.5, 0.5))
+  expect_equal(as.numeric(calcAlleleFreq(c(1,1,2,2, NA), c(1,1,2,2, NA))), c(0.5, 0.5))
 })
 
 
