@@ -5,7 +5,9 @@ createSimObject <- setRefClass(Class = "Sim",
                           summary = "data.frame",
                           params = "list",
                           registry = "list",
-                          counter = "list"
+                          counter = "list",
+                          spagedi_data_adults = "list",
+                          spagedi_data_seedlings = "list"
                           )
             )
 
@@ -87,7 +89,7 @@ runSim <- function(sim, steps = 1){
     chooseGenotypesForOffspring(sim)
     procCensus(sim)
     steps_remaining <- steps_remaining - 1
-    cat(signif((1 - steps_remaining / steps) * 100, 2), "% complete \n ")
+    cat(signif((1 - steps_remaining / steps) * 100, 2), "% complete \n")
   } 
   cat("Updating summary... \n")
   updateSummary(sim)
@@ -135,8 +137,14 @@ updateSummary <- function(sim){
   he_seedlings_alive <- rep(NA, length(sim$registry))
     i <- 1
     for(step in 1:length(sim$registry)){
+      
+      if(step == 1){
+        i <- i + 1 # Skip first step for seedlings
+        next
+      } 
+      
       he_seedlings_alive[i] <- calcHeAvg(sim = sim,
-        data_subset = sim$data[unlist(sim$registry[[step]][2]), ])
+                                  data_subset = sim$data[unlist(sim$registry[[step]][2]), ])
       i <- i + 1
     }
 
@@ -145,7 +153,9 @@ updateSummary <- function(sim){
                            n_adults_alive = adults_alive,
                            n_seedlings_alive = seedlings_alive,
                            he_adults_alive = he_adults_alive,
-                           he_seedlings_alive = he_seedlings_alive
+                           he_seedlings_alive = he_seedlings_alive,
+                           sp_adults = NA,
+                           sp_seedlings = NA
                            )
   sim$summary <- summary_df 
   

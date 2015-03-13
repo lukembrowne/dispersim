@@ -36,7 +36,7 @@ plotSummary <- function(sim){
   adult_col <- "grey4"
   seedling_col <- "red"
   
-  par(mfrow = c(2,2), mar = c(3.1, 4, 2, 1))
+  par(mfrow = c(2,3), mar = c(3.1, 4, 2, 1))
     # Plot adult population size
   plot(sim$summary$generation, sim$summary$n_adults_alive, type = "l", lwd = 2,
        las = 1, main = "Adults", ylab = "N", xlab = "", col = adult_col,
@@ -51,7 +51,16 @@ plotSummary <- function(sim){
        ylim = c(0, 1), col = adult_col)
   lines(sim$summary$generation, sim$summary$he_seedlings_alive, type = "l", lwd = 2,
         col = seedling_col)
-
+  
+    # Plot Sp over time
+  plot(sim$summary$generation, sim$summary$sp_adults, type = "l", lwd = 2,
+       las = 1, ylab = "Sp", xlab = "", main = "Sp",
+       ylim = c(0, 0.4), col = adult_col)
+  lines(sim$summary$generation, sim$summary$sp_seedlings, type = "l", lwd = 2,
+        col = seedling_col)  
+  
+  
+    # Plot landscape
   plotSim(sim)
     # Reset par settings
   on.exit(par(old_par))
@@ -115,5 +124,6 @@ plotPollenTrace <- function(sim, step = sim$counter$step, alpha_value = 0.25){
             lty = 2,
             col = sim$data$color[id_father])
 }
+
 
 

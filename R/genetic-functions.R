@@ -142,34 +142,71 @@ getDiploidGenotype <- function(data_subset, locus_name, sep = "-"){
 
 ## Calculate sp across steps
 
-runSpagediAnalysis <- function(sim){
+runSpagediAnalysis <- function(sim, type, output_path){
   
-  for(step in 1:sim$counter$step){
-    
-    writeSpagedi(sim, type =  "adult", step = step, 
-                 file_name =  paste("./temp/adult_", step,".txt", sep = ""), 
-                 dist_int = seq(10, sim$params$x_max, by = 10))
-    
-    runSpagedi(directory_path = "./temp/", 
-               input_file_name =  paste("adult_", step,".txt", sep = ""),
-               output_file_name = paste("adult_out_", step,".txt", sep = ""), 
-               categories_present = FALSE, perm = FALSE)
-    
-    if(step == 1) {next} # Since there are no seedlings in first step.. skip loop
-      writeSpagedi(sim, type =  "seedling", step = step, 
-                   file_name =  paste("./temp/seedling_", step,".txt", sep = ""), 
-                   dist_int = seq(10, sim$params$x_max, by = 10))
-      
-      runSpagedi(directory_path = "./temp/", 
-                 input_file_name =  paste("seedling_", step,".txt", sep = ""),
-                 output_file_name = paste("seedling_out_", step,".txt", sep = ""), 
-                 categories_present = FALSE, perm = FALSE)
-    cat("Processing step...", step, "\n")
+    # Create output directory if it doesn't exist
+  if(!file.exists(output_path)){
+    dir.create(output_path)
   }
   
+  for(step in 1:sim$counter$step){
+    # Since there are no seedlings in first step.. skip loop
+    if(step == 1 & type == "seedling") {next} 
+    
+    # Need to add leading zeroes to step number so the files can be sorted nicely later
+    step_name <- formatC(step, width = 3, flag = "0")
+    
+    writeSpagedi(sim, type =  type, step = step, 
+                 file_name =  paste(output_path, type, "_", step_name,".txt", sep = ""), 
+                 dist_int = seq(10, sim$params$x_max, by = 10))
+    
+    runSpagedi(directory_path = output_path, 
+               input_file_name =  paste(type, "_", step_name,".txt", sep = ""),
+               output_file_name = paste(type, "_out_", step_name,".txt", sep = ""), 
+               categories_present = FALSE, perm = FALSE)
+    cat("Processing step...", step, "\n")
+  }
 }
 
 
+## Read through a bunch of spagedi output files and saves it into a list
+readSpagediAnalysis <- function(sim, type, output_path){
+  
+  output_files <- list.files(output_path, pattern = "out")
+  
+  if(length(output_files) == 0 ){
+    stop("Warning... no output files of that type found!\n")
+  }
+  
+  
+  step <- 1
+  
+  for(output_file in output_files){
+    
+   spag_list <-  makeSpagediList(paste(output_path, output_file, sep = ""))
+   
+   if(type == "adult"){
+     sim$spagedi_data_adults[[step]] <- spag_list
+   } else if(type == "seedling"){
+     if(step == 1) step <- 2
+     sim$spagedi_data_seedlings[[step]] <- spag_list
+   } else {
+     stop("Type not recognized..\n")
+   }
+   
+   step <- step + 1
+  }
+}
+
+addSpToSummary <- function(sim){
+  
+  for(step in 1:sim$counter$step){
+    sim$summary$sp_adults[step] <- mean(SpSummary(sim$spagedi_data_adults[[step]]))
+    
+    if(step == 1) next # Skip first step for seedlings
+    sim$summary$sp_seedlings[step] <- mean(SpSummary(sim$spagedi_data_seedlings[[step]]))
+  }
+}
 
 
 
