@@ -11,8 +11,6 @@ Description: This package simulates how pollen and seed dispersal affects the
 License: GPL (>= 2)
 Imports: 
   Rcpp (>= 0.11.3),
-  ggplot2 (>= 1.0.0),
-  reshape2 (>= 1.4.0),
   colorRamps,
   scales,
   rSpagedi
