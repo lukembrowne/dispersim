@@ -78,12 +78,27 @@ plotSummary <- function(sim){
 
 
 # Plot dispersal kernels
-plotKernels <- function(sim){
+plotKernels <- function(sim, type, step){
   
-  dat <- data.frame(seed_obs = calcSeedDispDistance(sim),
-                    pollen_obs = calcPollenDispDistance(sim),
-                    pollen_eff_obs = calcEffectivePollenDispDistance(sim)
-                    )
+  if(type == "adult" & step <= sim$params$age_at_adult){
+    stop("Cannot calculate dispersal kernel for adults below step ", 
+         sim$params$age_at_adult, "...\n")
+  }
+  
+  if(type == "seedling" & step == 1){
+    stop("Cannot calculate dispersal kernel for seedlings at step 1...\n")
+  }
+  
+  if(step < 1 | step > sim$counter$step){
+    stop("Step is not valid...\n")
+  }
+  
+    # Build dataframe of dispersal distances
+  dat <- data.frame(seed_obs = calcDispDistance(sim, type, method = "seed", step),
+                    pollen_obs = calcDispDistance(sim, type, method = "pollen", step),
+                pollen_eff_obs = calcDispDistance(sim, type, method = "total pollen", step))
+  
+    # Generate data from set dispersal kernels
   dat$seed_kernel <- rweibull(dim(dat)[1], shape = sim$params$seed_kernel_shape,
                               scale = sim$params$seed_kernel_scale)
   
@@ -91,54 +106,55 @@ plotKernels <- function(sim){
                                 scale = sim$params$pollen_kernel_scale)
 
     # Save kernel density estimates
-    seed_obs <- density(dat$seed_obs)
-    seed_kernel <- density(dat$seed_kernel)
-    pollen_obs <- density(dat$pollen_obs)
-    pollen_eff_obs <- density(dat$pollen_eff_obs)
-    pollen_kernel <- density(dat$pollen_kernel)
+    seed_obs <- density(dat$seed_obs, na.rm = TRUE)
+    seed_kernel <- density(dat$seed_kernel, na.rm = TRUE)
+    pollen_obs <- density(dat$pollen_obs, na.rm = TRUE)
+    pollen_eff_obs <- density(dat$pollen_eff_obs, na.rm = TRUE)
+    pollen_kernel <- density(dat$pollen_kernel, na.rm = TRUE)
     
     # Find max y values for both pollen and seed for plotting
     max_seed_y <- max(seed_obs$y, seed_kernel$y)
     max_pollen_y <- max(pollen_obs$y, pollen_eff_obs$y, pollen_kernel$y)
+    max_x <- max(seed_obs$x, seed_kernel$x, pollen_obs$x, pollen_eff_obs$x, pollen_kernel$x)
     
     
     # Set colors
     seed_obs_col <- "green"
-    seed_kernel_col <- "purple"
-    pollen_obs_col <- "purple"
-    pollen_eff_obs_col <- "green"
-    pollen_kernel_col <- "red"
+    seed_kernel_col <- "grey50"
+    pollen_obs_col <- "blue"
+    pollen_eff_obs_col <- "red"
+    pollen_kernel_col <- "grey50"
     alpha_value <- .25
     
     # Set par settings
     old_par <- par("mfrow", "mar")
     par(mfrow = c(2,1), mar = c(3.1, 4, 2, 1))
   
-    # Seed dispersal kernel 
-  plot(seed_obs, xlab = "Distance (m)", las = 1, main = "Seed dispersal",
-       ylim = c(0, max_seed_y * 1.1))
-  polygon(seed_obs, col = scales::alpha(seed_obs_col, alpha_value))
-    
-  lines(seed_kernel)
-  polygon(seed_kernel, col = scales::alpha(seed_kernel_col, alpha_value))
-    
-  legend("topright", c("Observed", "Kernel"), 
-         fill = c(scales::alpha(seed_obs_col, alpha_value),                                                       scales::alpha(seed_kernel_col, alpha_value)))
+      # Seed dispersal kernel 
+    plot(seed_obs, xlab = "Distance (m)", las = 1, main = "Seed dispersal",
+         ylim = c(0, max_seed_y * 1.1), xlim = c(0, max_x * 1.1))
+    polygon(seed_obs, col = scales::alpha(seed_obs_col, alpha_value))
+      
+    lines(seed_kernel)
+    polygon(seed_kernel, col = scales::alpha(seed_kernel_col, alpha_value))
+      
+    legend("topright", c("Observed", "Kernel"), 
+           fill = c(scales::alpha(seed_obs_col, alpha_value),                                                       scales::alpha(seed_kernel_col, alpha_value)))
   
     # Pollen dispersal kernel
-  plot(pollen_obs, xlab = "Distance (m)", las = 1, main = "Pollen dispersal",
-       ylim = c(0, max_pollen_y * 1.1))
-  polygon(pollen_obs, col = scales::alpha(pollen_obs_col, alpha_value))
-    
-  lines(pollen_eff_obs)
-  polygon(pollen_eff_obs, col = scales::alpha(pollen_eff_obs_col, alpha_value))
-    
-  lines(pollen_kernel)
-  polygon(pollen_kernel, col = scales::alpha(pollen_kernel_col, alpha_value))
-  legend("topright", c("Observed", "Effective", "Kernel"), 
-            fill = c(scales::alpha(pollen_obs_col, alpha_value), 
-                     scales::alpha(pollen_eff_obs_col, alpha_value),
-                     scales::alpha(pollen_kernel_col, alpha_value)))
+    plot(pollen_obs, xlab = "Distance (m)", las = 1, main = "Pollen dispersal",
+         ylim = c(0, max_pollen_y * 1.1), xlim = c(0, max_x * 1.1))
+    polygon(pollen_obs, col = scales::alpha(pollen_obs_col, alpha_value))
+      
+    lines(pollen_eff_obs)
+    polygon(pollen_eff_obs, col = scales::alpha(pollen_eff_obs_col, alpha_value))
+      
+    lines(pollen_kernel)
+    polygon(pollen_kernel, col = scales::alpha(pollen_kernel_col, alpha_value))
+    legend("topright", c("Observed", "Total", "Kernel"), 
+              fill = c(scales::alpha(pollen_obs_col, alpha_value), 
+                       scales::alpha(pollen_eff_obs_col, alpha_value),
+                       scales::alpha(pollen_kernel_col, alpha_value)))
   
   on.exit(par(old_par))
 }

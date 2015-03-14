@@ -59,45 +59,48 @@ dispersePollen <- function(sim, adult_indices, seedling_indices){
 ## Calculate seed dispersal distance
 # Distance from seedling to mother
 
-calcSeedDispDistance <- function(sim){
+calcDispDistance <- function(sim, type, method, step){
   
-  recruits <- sim$data[!is.na(sim$data$id_mother), ]
+  if(type != "adult" & type != "seedling"){
+    stop("Type not recognized...\n")
+  }
   
-  disp_dist <- .calcDist(x1 = recruits$pos_x, 
-                       x2 = sim$data$pos_x[recruits$id_mother],
-                       y1 = recruits$pos_y, 
-                       y2 = sim$data$pos_y[recruits$id_mother])
+  if(method != "seed" & method != "pollen" & method != "total pollen"){
+    stop("Method not recognized...\n")
+  }
+  
+    # Subset to relevant plants... those that are alive at time step of interest
+  registry_index <- ifelse(type == "adult", 1, 2)
+  alive <- sim$data[sim$registry[[step]][[registry_index]], ]
+  
+    # Distance from plant to mother
+  if(method == "seed"){
+    x1 <- alive$pos_x
+    y1 <- alive$pos_y
+    x2 <- sim$data$pos_x[alive$id_mother]
+    y2 <- sim$data$pos_y[alive$id_mother]
+  }
+  
+    # Distance from mother to father
+  if(method == "pollen"){
+    x1 <- sim$data$pos_x[alive$id_father]
+    y1 <- sim$data$pos_y[alive$id_father]
+    x2 <- sim$data$pos_x[alive$id_mother]
+    y2 <- sim$data$pos_y[alive$id_mother]
+  }
+  
+    # Total pollen movement - from plant to father
+  if(method == "total pollen"){
+    x1 <- alive$pos_x
+    y1 <- alive$pos_y
+    x2 <- sim$data$pos_x[alive$id_father]
+    y2 <- sim$data$pos_y[alive$id_father]
+  }
+  
+  disp_dist <- .calcDist(x1 = x1, 
+                       x2 = x2,
+                       y1 = y1, 
+                       y2 = y2)
   
   return(disp_dist)  # Returns vector of distances 
 }
-
-# Calculate pollen dispersal distance
-# Distance from mother to father
-calcPollenDispDistance <- function(sim){
-  
-  recruits <- sim$data[!is.na(sim$data$id_father), ]
-  
-  disp_dist <- .calcDist(x1 = sim$data$pos_x[recruits$id_father], 
-                        x2 = sim$data$pos_x[recruits$id_mother],
-                        y1 = sim$data$pos_y[recruits$id_father], 
-                        y2 = sim$data$pos_y[recruits$id_mother])
-  
-  return(disp_dist)  # Returns vector of distances 
-}
-
-
-
-# Calculate 'effective' pollen dispersal distance -
-# Distance from seedling to father
-calcEffectivePollenDispDistance <- function(sim){
-  
-  recruits <- sim$data[!is.na(sim$data$id_father), ]
-  
-  disp_dist <- .calcDist(x1 = recruits$pos_x, 
-                        x2 = sim$data$pos_x[recruits$id_father],
-                        y1 = recruits$pos_y, 
-                        y2 = sim$data$pos_y[recruits$id_father])
-  
-  return(disp_dist)  # Returns vector of distances 
-}
-
