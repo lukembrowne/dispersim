@@ -155,7 +155,9 @@ updateSummary <- function(sim){
                            he_adults_alive = he_adults_alive,
                            he_seedlings_alive = he_seedlings_alive,
                            sp_adults = NA,
-                           sp_seedlings = NA
+                           sp_seedlings = NA,
+                           nae_adults = NA,
+                           nae_seedlings = NA
                            )
   sim$summary <- summary_df 
   

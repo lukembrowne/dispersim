@@ -208,5 +208,14 @@ addSpToSummary <- function(sim){
   }
 }
 
+addNaeToSummary <- function(sim){
+  for(step in 1:sim$counter$step){
+    sim$summary$nae_adults[step] <- extractDivParam(sim$spagedi_data_adults[[step]], "nae")[1, 1]
+    
+    if(step == 1) next # Skip first step for seedlings
+    sim$summary$nae_seedlings[step] <- extractDivParam(sim$spagedi_data_seedlings[[step]], "nae")[1, 1]
+  }
+}
+
 
 
