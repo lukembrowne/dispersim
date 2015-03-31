@@ -13,6 +13,7 @@ Imports:
   Rcpp (>= 0.11.3),
   colorRamps,
   scales,
-  rSpagedi
+  rSpagedi,
+  pdist
 LinkingTo: Rcpp
 Suggests: testthat

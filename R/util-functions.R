@@ -54,7 +54,11 @@
     cat("adult_survival must be between 0 and 1...\n")
     n_errors <- n_errors + 1
   }
-  if(params$seedling_survival < 0 | params$seedling_survival > 1){
+  if(!(params$seedling_survival %in% c("random", "distance"))){
+    cat("seedling_survival must be either 'random' or 'distance'... \n")
+    n_errors <- n_errors + 1
+  }
+  if(params$seedling_survival_prob < 0 | params$seedling_survival_prob > 1){
     cat("seedling_survival must be between 0 and 1...\n")
     n_errors <- n_errors + 1
   }

@@ -195,5 +195,14 @@ plotPollenTrace <- function(sim, step = sim$counter$step, alpha_value = 0.25){
             col = sim$data$color[id_father])
 }
 
+plotSurvivalCurve <- function(sim){
+  location <- sim$params$seedling_survival_dist_location
+  scale <- sim$params$seedling_survival_dist_scale
+  
+  plot(1:sim$params$x_max, plogis(1:sim$params$x_max, location = location, scale = scale),
+       ylab = "Probability of survival", xlab = "Distance", las = 1, type = "l", lwd = 3,
+       ylim = c(0, 1), main = "Distance based survival of seedlings")
+}
+
 
 
