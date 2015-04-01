@@ -218,4 +218,50 @@ addNaeToSummary <- function(sim){
 }
 
 
+## Calc Fij kinship coefficient from Loiselle et al. 1995
+# Formula taken from Spagedi 1.4 manual
+
+calcPairwiseFij <- function(id1, id2, ref_ids){
+  
+  denom = 0 # Initialize denominator and numerator
+  numer = 0
+  
+  gen1 <- sim$data[id1, sim$params$loci_names] # Subset out genotypes
+  gen2 <- sim$data[id2, sim$params$loci_names]
+  ref_gen <- sim$data[ref_ids, sim$params$loci_names]
+  n <- dim(ref)[1]
+  
+    # Loop through loci
+  for(locus in seq(1, length(sim$params$loci_names), 2)){
+    
+    # Find reference allele frequencies
+    ref_freq <- calcAlleleFreq(ref_gen[, locus], ref_gen[, locus + 1])
+    
+    gen1_freq <- rep(0, length(ref_freq))
+    names(gen1_freq) <- names(ref_freq)
+    gen2_freq <- rep(0, length(ref_freq))
+    names(gen2_freq) <- names(ref_freq)
+    
+    gen1_freq_raw <- calcAlleleFreq(gen1[, locus], gen1[, locus + 1])
+    gen2_freq_raw <- calcAlleleFreq(gen2[, locus], gen2[, locus + 1])
+    
+    gen1_freq[names(gen1_freq_raw)] <- gen1_freq_raw
+    gen2_freq[names(gen2_freq_raw)] <- gen2_freq_raw
+  
+      for(allele in names(ref_freq)){
+          ## Numerator calcuations
+       numer_temp =  sum((gen1_freq[allele] - ref_freq[allele]) * (gen2_freq[allele] -
+          ref_freq[allele])) +sum(ref_freq[allele]*(1 - ref_freq[allele]) / (n - 1))
+      numer = numer + numer_temp
+        # Denominator calculations
+      denom_temp = ref_freq[allele] * (1 - ref_freq[allele])
+      denom = denom_temp + denom
+      }
+    
+  }
+   fij = numer / denom 
+   return(fij)
+}
+
+
 
