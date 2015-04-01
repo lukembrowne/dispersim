@@ -40,7 +40,7 @@ plotSummary <- function(sim){
     # Plot adult population size
   plot(sim$summary$generation, sim$summary$n_adults_alive, type = "l", lwd = 2,
        las = 1, main = "Adults", ylab = "N", xlab = "", col = adult_col,
-       ylim = c(0, max(sim$summary$n_adults_alive)))
+       ylim = c(0, max(sim$summary$n_adults_alive, na.rm = TRUE)))
   
     # Plot seedling population size
   plot(sim$summary$generation, sim$summary$n_seedlings_alive, type = "l", lwd = 2,

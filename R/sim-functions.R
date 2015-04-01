@@ -21,6 +21,7 @@ initSim <- function(params){
   initRegistry(sim)
   initAdults(sim)
   initLoci(sim)
+  initSummary(sim)
   procCensus(sim)
   cat("Simulation successfully inialized! \n")
   return(sim)
@@ -67,10 +68,26 @@ initCounter <- function(sim){
   cat("Counter initialized... \n")
 }
 
-# Initialized registry
+# Initialize registry
 initRegistry <- function(sim){
   sim$registry <- list()
   cat("Registry initialized... \n")
+}
+
+# Initialize summary
+initSummary <- function(sim){
+  max_gen = 50
+  sim$summary <- data.frame(generation = rep(NA, max_gen), 
+                           n_adults_alive = rep(NA, max_gen),
+                           n_seedlings_alive = rep(NA, max_gen),
+                           he_adults_alive = rep(NA, max_gen),
+                           he_seedlings_alive = rep(NA, max_gen),
+                           sp_adults = rep(NA, max_gen),
+                           sp_seedlings = rep(NA, max_gen),
+                           nae_adults = rep(NA, max_gen),
+                           nae_seedlings = rep(NA, max_gen)
+  )
+  cat("Summary initialized... \n")
 }
 
 
@@ -78,6 +95,12 @@ initRegistry <- function(sim){
 runSim <- function(sim, steps = 1){
   cat("Beginning simulation...", steps, "total steps \n")
   steps_remaining <- steps
+  
+  if(sim$counter$step == 1){
+    updateGeneration(sim)
+    updatePopsizes(sim)
+    updateHe(sim)
+  }
   
   while(steps_remaining > 0){
     sim$counter$step <- sim$counter$step + 1
@@ -88,11 +111,15 @@ runSim <- function(sim, steps = 1){
     updateCounter(sim)
     chooseGenotypesForOffspring(sim)
     procCensus(sim)
+    # Update summary information
+    updateGeneration(sim)
+    updatePopsizes(sim)
+    updateHe(sim)
+    #updateFij(sim)
     steps_remaining <- steps_remaining - 1
     cat(signif((1 - steps_remaining / steps) * 100, 2), "% complete \n")
-  } 
-  cat("Updating summary... \n")
-  updateSummary(sim)
+  }
+  plotSummary(sim)
   cat("--- Simulation complete! ---")
 }        
 
@@ -112,8 +139,29 @@ updateCounter <- function(sim){
   sim$counter$plant <- min(which(is.na(sim$data$id))) - 1
 }
 
+# Update generation row in summary dataframe
+updateGeneration <- function(sim){
+  sim$summary$generation[sim$counter$step] <- sim$counter$step
+}
 
+# Update population sizes in summary dataframe
+updatePopsizes <- function(sim){
+  
+  sim$summary[sim$counter$step, "n_adults_alive"] <- length(sim$registry[[sim$counter$step]]$adults_alive)
+  sim$summary[sim$counter$step, "n_seedlings_alive"] <-  length(sim$registry[[sim$counter$step]]$seedlings_alive)
+}
 
+# Update He calculations in summary dataframe
+
+updateHe <- function(sim){
+
+  sim$summary$he_adults_alive[sim$counter$step] <-  calcHeAvg(sim = sim, 
+                    data_subset = sim$data[sim$registry[[sim$counter$step]]$adults_alive, ])
+  
+  sim$summary$he_seedlings_alive[sim$counter$step] <-  calcHeAvg(sim = sim, 
+                  data_subset = sim$data[sim$registry[[sim$counter$step]]$seedlings_alive, ])
+}  
+ 
 ### Generate summary of demographic and genetic data
 updateSummary <- function(sim){
   
@@ -148,18 +196,7 @@ updateSummary <- function(sim){
       i <- i + 1
     }
 
-    # Put together all information into a data frame
-  summary_df <- data.frame(generation = 1:sim$counter$step, 
-                           n_adults_alive = adults_alive,
-                           n_seedlings_alive = seedlings_alive,
-                           he_adults_alive = he_adults_alive,
-                           he_seedlings_alive = he_seedlings_alive,
-                           sp_adults = NA,
-                           sp_seedlings = NA,
-                           nae_adults = NA,
-                           nae_seedlings = NA
-                           )
-  sim$summary <- summary_df 
+
   
     # Plot summary data                  
   plotSummary(sim)
