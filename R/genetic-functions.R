@@ -221,15 +221,13 @@ addNaeToSummary <- function(sim){
 ## Calc Fij kinship coefficient from Loiselle et al. 1995
 # Formula taken from Spagedi 1.4 manual
 
-calcPairwiseFij <- function(id1, id2, ref_ids){
+calcFijPairwise <- function(sim, id1, id2, ref_gen, n){
   
   denom = 0 # Initialize denominator and numerator
   numer = 0
   
   gen1 <- sim$data[id1, sim$params$loci_names] # Subset out genotypes
   gen2 <- sim$data[id2, sim$params$loci_names]
-  ref_gen <- sim$data[ref_ids, sim$params$loci_names]
-  n <- dim(ref)[1]
   
     # Loop through loci
   for(locus in seq(1, length(sim$params$loci_names), 2)){
@@ -263,5 +261,42 @@ calcPairwiseFij <- function(id1, id2, ref_ids){
    return(fij)
 }
 
+# Calculate average Fij across a population
+calcFijPopulation <- function(sim, ids){
+  
+  ref_gen <- sim$data[ids, sim$params$loci_names] # Calculate
+  n_gene_copies <- length(ids) * 2  # Gene copies (* 2 for diploid)
+  
+  
+  id_combos <- combn(ids, 2)
+  fijs <- rep(NA, dim(id_combos)[2])
+  i <- 0
+  for(column in 1:dim(id_combos)[2]){
+    fijs[column] <- calcFijPairwise(sim, id1 = id_combos[1, column], 
+                                    id2 = id_combos[2, column],
+                                     ref_gen = ref_gen, n = n_gene_copies)
+  }
+  
+  return(mean(fijs))
+}
 
 
+calcNae <- function(sim, ids){
+  # Following formula (16) in Nielsen et al. 2003
+  gen_data <- sim$data[ids, sim$params$loci_names]
+  naes <- rep(NA, sim$params$n_loci)
+  n_samples <- length(ids) * 2 # Number of gene copies (*2 for diploid)
+  i <- 1
+  
+  for(locus in seq(1, length(sim$params$loci_names), 2)){ # Repeat of Fij pairwise 
+    ref_freq <- calcAlleleFreq(gen_data[, locus], gen_data[, locus + 1])
+    
+    nae <- ((n_samples - 1) ^2) / (sum(ref_freq^2) * (n_samples + 1) * (n_samples - 2) + 3 - n_samples)
+    
+    naes[i] <- nae
+    i <- i + 1
+  }
+  return(mean(naes))
+}
+
+  

@@ -99,7 +99,7 @@ runSim <- function(sim, steps = 1){
   if(sim$counter$step == 1){
     updateGeneration(sim)
     updatePopsizes(sim)
-    updateHe(sim)
+    #updateHe(sim)
   }
   
   while(steps_remaining > 0){
@@ -115,6 +115,7 @@ runSim <- function(sim, steps = 1){
     updateGeneration(sim)
     updatePopsizes(sim)
     updateHe(sim)
+    updateNae(sim)
     #updateFij(sim)
     steps_remaining <- steps_remaining - 1
     cat(signif((1 - steps_remaining / steps) * 100, 2), "% complete \n")
@@ -151,8 +152,8 @@ updatePopsizes <- function(sim){
   sim$summary[sim$counter$step, "n_seedlings_alive"] <-  length(sim$registry[[sim$counter$step]]$seedlings_alive)
 }
 
-# Update He calculations in summary dataframe
 
+# Update He calculations in summary dataframe
 updateHe <- function(sim){
 
   sim$summary$he_adults_alive[sim$counter$step] <-  calcHeAvg(sim = sim, 
@@ -162,48 +163,23 @@ updateHe <- function(sim){
                   data_subset = sim$data[sim$registry[[sim$counter$step]]$seedlings_alive, ])
 }  
  
-### Generate summary of demographic and genetic data
-updateSummary <- function(sim){
-  
-    # Get pop sizes by look at length of registry for each class
-  pop_sizes <- unlist(lapply(sim$registry, FUN = function(x) lapply(x, length)))
-  
-    # Subsetting named vector of pop sizes
-  adults_alive <- pop_sizes[which(names(pop_sizes) == "adults_alive")]
-  seedlings_alive <- pop_sizes[which(names(pop_sizes) == "seedlings_alive")]
-  
-    # Calculate He per generation for adults
-  he_adults_alive <- rep(NA, length(sim$registry))
-      i <- 1
-    for(step in 1:length(sim$registry)){
-    he_adults_alive[i] <- calcHeAvg(sim = sim, 
-                  data_subset = sim$data[unlist(sim$registry[[step]][1]), ])
-    i <- i + 1
-    }
-      
-    # Calculate He per generation for seedlings
-  he_seedlings_alive <- rep(NA, length(sim$registry))
-    i <- 1
-    for(step in 1:length(sim$registry)){
-      
-      if(step == 1){
-        i <- i + 1 # Skip first step for seedlings
-        next
-      } 
-      
-      he_seedlings_alive[i] <- calcHeAvg(sim = sim,
-                                  data_subset = sim$data[unlist(sim$registry[[step]][2]), ])
-      i <- i + 1
-    }
 
-
+# Update Fij
+updateFij <- function(sim){
   
-    # Plot summary data                  
-  plotSummary(sim)
+  #fij_adults <-  
   
-
 }
 
+# Update Nae in summary
+
+updateNae <- function(sim){
+  sim$summary$nae_adults[sim$counter$step] <-  calcNae(sim = sim, 
+                                  ids = sim$registry[[sim$counter$step]]$adults_alive)
+  
+  sim$summary$nae_seedlings[sim$counter$step] <-   calcNae(sim = sim, 
+                                  ids = sim$registry[[sim$counter$step]]$seedlings_alive)
+}
 
 
 
