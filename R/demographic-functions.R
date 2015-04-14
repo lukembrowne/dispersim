@@ -65,30 +65,30 @@ procSurvival <- function(sim){
   }
   
   ## If seedling survival is distance dependent...
-  if(sim$params$seedling_survival == "distance"){
+    if(sim$params$seedling_survival == "distance"){
+      
+      # Find coords of alive seedlings and adults
+    seedling_coords <- sim$data[with(sim$data, which(type == "seedling" & alive == TRUE)),
+                                c("pos_x", "pos_y")]
+    adult_coords <- sim$data[with(sim$data, which(type == "adult" & alive == TRUE)), 
+                             c("pos_x", "pos_y")]
     
-    # Find coords of alive seedlings and adults
-  seedling_coords <- sim$data[with(sim$data, which(type == "seedling" & alive == TRUE)),
-                              c("pos_x", "pos_y")]
-  adult_coords <- sim$data[with(sim$data, which(type == "adult" & alive == TRUE)), 
-                           c("pos_x", "pos_y")]
+    # Find distance from each seedling to nearest adult
+    distances <- as.matrix(pdist::pdist(seedling_coords, adult_coords)) # calculate distances
+    
+    dist_to_nearest_adult <- apply(distances, 1, min)
   
-  # Find distance from each seedling to nearest adult
-  distances <- as.matrix(pdist::pdist(seedling_coords, adult_coords)) # calculate distances
-  
-  dist_to_nearest_adult <- apply(distances, 1, min)
-
-  # Use distance to estimate probability of survival in a logistic form?
-  
-  prob_of_survival_dist <- plogis(dist_to_nearest_adult,
-                             location = sim$params$seedling_survival_dist_location,
-                             scale = sim$params$seedling_survival_dist_scale)
-  # 1 is alive, 0 is dead
-  seedling_fate  <- rbinom(length(prob_of_survival_dist), 1, prob_of_survival_dist)
-  seedling_fate <- seedling_fate == 1
-  
-  sim$data$alive[with(sim$data, which(type == "seedling" & alive == TRUE))] <- seedling_fate
-  
+    # Use distance to estimate probability of survival in a logistic form?
+    
+    prob_of_survival_dist <- plogis(dist_to_nearest_adult,
+                               location = sim$params$seedling_survival_dist_location,
+                               scale = sim$params$seedling_survival_dist_scale)
+    # 1 is alive, 0 is dead
+    seedling_fate  <- rbinom(length(prob_of_survival_dist), 1, prob_of_survival_dist)
+    seedling_fate <- seedling_fate == 1
+    
+    sim$data$alive[with(sim$data, which(type == "seedling" & alive == TRUE))] <- seedling_fate
+    
   }
   
   
