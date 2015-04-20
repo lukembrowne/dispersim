@@ -1,11 +1,13 @@
 
   # Plot simulation world
-plotSim <- function(sim, step = sim$counter$step, alpha_value = 1){
+plotSim <- function(sim, step = sim$counter$step, alpha_value = 1, color = "maternal", 
+                    main = ""){
   
     # Initialize plot
    plot(0, type = 'n', asp = 1,
         pch = 19, xlab = "", ylab = "", las = 1, 
         xlim = c(0, sim$params$x_max), ylim = c(0, sim$params$y_max),
+        main = main
         )
    
     # Draw border of study area
@@ -16,14 +18,24 @@ plotSim <- function(sim, step = sim$counter$step, alpha_value = 1){
    adults_alive <- sim$data[sim$registry[[step]][[1]], ]
    seedlings_alive <- sim$data[sim$registry[[step]][[2]], ]
    
+   if(color == "maternal"){
+   seedling_color <- seedlings_alive$color
+   adults_color <- adults_alive$color
+   }
+   
+   if(color == "paternal"){
+     seedling_color <- sim$data$color[seedlings_alive$id_father]
+     adults_color <- sim$data$color[adults_alive$id_father]
+   }
+   
     # Plot seedlings, 
     points(seedlings_alive$pos_x, seedlings_alive$pos_y, pch = 21, cex = .75,
-            bg = scales::alpha(seedlings_alive$color, alpha_value),
+            bg = scales::alpha(seedling_color, alpha_value),
             col = "grey4")
    
    # Plot adults
     points(adults_alive$pos_x, adults_alive$pos_y, pch = 22, cex = 1.25, 
-           bg = scales::alpha(adults_alive$color, 1),
+           bg = scales::alpha(adults_color, 1),
            col = "grey4")
 }
 
@@ -46,8 +58,8 @@ plotSummary <- function(sim){
   plot(sim$summary$generation, sim$summary$n_seedlings_alive, type = "l", lwd = 2,
        las = 1, main = "Seedlings", ylab = "", xlab = "Steps", col = seedling_col)
   
-  # Plot landscape
-  plotSim(sim)
+  # Plot landscape - maternal
+  plotSim(sim, color = "maternal", main = "Maternal")
   
     # Plot He
   plot(sim$summary$generation, sim$summary$he_adults_alive, type = "l", lwd = 2,
@@ -64,11 +76,13 @@ plotSummary <- function(sim){
              col = seedling_col)
   
     # Plot Sp over time
-  plot(sim$summary$generation, sim$summary$sp_adults, type = "l", lwd = 2,
-       las = 1, ylab = "Sp", xlab = "", main = "Sp",
-       ylim = c(0, 0.4), col = adult_col)
-  lines(sim$summary$generation, sim$summary$sp_seedlings, type = "l", lwd = 2,
-        col = seedling_col)  
+#   plot(sim$summary$generation, sim$summary$sp_adults, type = "l", lwd = 2,
+#        las = 1, ylab = "Sp", xlab = "", main = "Sp",
+#        ylim = c(0, 0.4), col = adult_col)
+#   lines(sim$summary$generation, sim$summary$sp_seedlings, type = "l", lwd = 2,
+#         col = seedling_col)  
+  
+  plotSim(sim, color = "paternal", main = "Paternal")
   
   
     # Reset par settings
