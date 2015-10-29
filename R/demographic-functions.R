@@ -1,110 +1,96 @@
-procReproduce <- function(sim){
-  
-  # Subset so we're only dealing with alive adults
-  adult_indices <- which(sim$data$type == "adult" & sim$data$alive == TRUE)
-    # Skip reproduction if there are no adults!
-  if(length(adult_indices) == 0 ) return(cat("No adults alive left to breed...\n")) 
-  
-  n_adults_current <- length(adult_indices)
-  
-    # Calc number of total seedlings and the row indices we'll be using
-  n_seedlings <- n_adults_current * sim$params$crop_size 
-  seedling_indices <- (sim$counter$plant + 1):(sim$counter$plant + n_seedlings)
-  
-  if(length(seedling_indices) != n_seedlings){
-    stop("Problem with n_seedlings and indices")}
-  
-    # Update data frame with information for the seedlings  
-  sim$data$id[seedling_indices]      <-  seedling_indices
-  sim$data$type[seedling_indices]    <-  "seedling"
-  sim$data$alive[seedling_indices]   <-  TRUE
-  sim$data$age[seedling_indices]     <-  0
-  
-    # Seed dispersal process - adds coordinates and mother_id   
-    disperseSeed(sim, adult_indices, seedling_indices)
-    dispersePollen(sim, adult_indices, seedling_indices)
-
-}
 
 
-# Determine which plants survive
-procSurvival <- function(sim){
-    # If it's the first generation, skip
-  if(sim$counter$step == 0) next
+# Returns probability of survive for a given offspring
+procSurvival <- function(offspr_x, offspr_y, 
+                         offspr_gen, offspr_sp,
+                         x, y, gen_data, sp,
+                         x_max, y_max, 
+                         recruit_thresh, 
+                         dead_index, 
+                         neighborhood_size,
+                         dist_beta, gen_beta, 
+                         boundary,
+                         n_loci, n_alleles_per_loci,
+                         ref_al_freq){
   
-    # If out of bounds and boundary setting is 'unsuitable', plants die
-      # Could maybe speed up by only looking at plants that are currently alive
-  if(sim$params$boundary_setting == "unsuitable"){
-    sim$data$alive[sim$data$pos_x > sim$params$x_max | sim$data$pos_x < 0] <- FALSE
-    sim$data$alive[sim$data$pos_y > sim$params$y_max | sim$data$pos_y < 0] <- FALSE 
-  }
-    
-    
-    # Make a vector of whether adults that are currently alive will die
-  n_adults_alive <-  sum(with(sim$data, alive[type == "adult" & alive == TRUE]),
-                         na.rm = TRUE)
-  adult_fate  <- sample(c(TRUE, FALSE), n_adults_alive, replace = TRUE,
-                        prob = c(sim$params$adult_survival,
-                                 1 - sim$params$adult_survival))
-  
-  sim$data$alive[with(sim$data, which(type == "adult" & alive == TRUE))] <- adult_fate
-  
-    ## Seedling survival 
-
-    ## If seedling survival is random...
-  if(sim$params$seedling_survival == "random"){
-    
-    n_seedlings_alive <- sum(with(sim$data, alive[type == "seedling" & alive == TRUE]),
-                             na.rm = TRUE)
-    
-    seedling_fate  <- sample(c(TRUE, FALSE), n_seedlings_alive, replace = TRUE , 
-                        prob = c(sim$params$seedling_survival_prob, 
-                                 1 - sim$params$seedling_survival_prob))
-    
-  sim$data$alive[with(sim$data, which(type == "seedling" & alive == TRUE))] <- seedling_fate
+  # Check if over recruitment threshold
+  if(boundary == "torus"){
+    distances_all_adults <- .distTorus(x1 = offspr_x, x2 = x, 
+                                      y1 = offspr_y, y2 = y,
+                                      xmax = plot_max, ymax = plot_max)
   }
   
-  ## If seedling survival is distance dependent...
-    if(sim$params$seedling_survival == "distance"){
+  if(boundary == "edge"){
+    distances_all_adults <- .calcDist(offspr_x, x,
+                                      offspr_y, y)
+  }
+  
+  # If below threshold, automatic death
+  if(any(distances_all_adults <= recruit_thresh, na.rm = TRUE)){ 
+    return(surv_prob = 0)
+  }
+  
+  # Skip costly calculations if distance and genetics don't matter..
+  if(dist_beta != 0 | gen_beta != 0){
+    
+    ### Find indices of the same species
+    same_species_indices <- which(sp == offspr_sp)
+    
+    # If no other adults of that species...
+    if(length(same_species_indices) == 0){
+      n_neighborhood = 0 
+      genetic_effect = 0 
       
-      # Find coords of alive seedlings and adults
-    seedling_coords <- sim$data[with(sim$data, which(type == "seedling" & alive == TRUE)),
-                                c("pos_x", "pos_y")]
-    adult_coords <- sim$data[with(sim$data, which(type == "adult" & alive == TRUE)), 
-                             c("pos_x", "pos_y")]
-    
-    # Find distance from each seedling to nearest adult
-    distances <- as.matrix(pdist::pdist(seedling_coords, adult_coords)) # calculate distances
-    
-    dist_to_nearest_adult <- apply(distances, 1, min)
-  
-    # Use distance to estimate probability of survival in a logistic form?
-    
-    prob_of_survival_dist <- plogis(dist_to_nearest_adult,
-                               location = sim$params$seedling_survival_dist_location,
-                               scale = sim$params$seedling_survival_dist_scale)
-    # 1 is alive, 0 is dead
-    seedling_fate  <- rbinom(length(prob_of_survival_dist), 1, prob_of_survival_dist)
-    seedling_fate <- seedling_fate == 1
-    
-    sim$data$alive[with(sim$data, which(type == "seedling" & alive == TRUE))] <- seedling_fate
-    
+    } else {
+      
+      ## Remove dead tree from same_species_indices
+      same_species_indices <- same_species_indices[same_species_indices != dead_index]
+      
+      # Calculate distances to same species
+      distances_to_sp <- distances_all_adults[same_species_indices]
+      
+      # Find neighbors within neighborhood
+      in_neighborhood_indices <- same_species_indices[distances_to_sp < neighborhood_size]
+      n_neighborhood <- length(in_neighborhood_indices)
+      
+      if(n_neighborhood == 0){
+        
+        genetic_effect = 0 
+        
+      } else if(gen_beta != 0){
+       
+        genetic_effect <- calcFij(offspr_gen, gen_data[in_neighborhood_indices, , drop = FALSE],
+                                      ref_al_freq,
+                                      n_loci = n_loci, 
+                                      n_alleles_per_loci = n_alleles_per_loci,
+                                      n_gene_copies = length(same_species_indices)*2)
+        
+        genetic_effect <- mean(genetic_effect)
+        
+        if(genetic_effect < 0) genetic_effect = 0 # Avoid negative relatedness
+
+      } else if(gen_beta == 0) {
+        
+        genetic_effect = 0
+        
+      }
+    }
   }
   
+  if(dist_beta == 0 & gen_beta == 0){
+    n_neighborhood = 0
+    genetic_effect = 0
+  }
   
+  ## Calculate total survival probability
+  # We take the mean instead of sum of genetic_effect makes it density independent
+  surv_prob <- 1 / (1 + n_neighborhood * dist_beta + 
+                      genetic_effect * gen_beta)
+  
+  return(surv_prob)
 }
-
-# Increase age by one step
-increaseAge <- function(sim){
-  alive <- which(sim$data$alive == TRUE)
-  sim$data$age[alive] <- sim$data$age[alive] + 1
-}
-
-# Transition to higher age class
-transitionType <- function(sim){
-  sim$data$type[sim$data$type == "seedling" & 
-                  sim$data$age >= sim$params$age_at_adult] <- "adult"
-}
+  
+  
 
 
 

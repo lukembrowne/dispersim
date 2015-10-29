@@ -1,43 +1,14 @@
 
-  # Plot simulation world
-plotSim <- function(sim, step = sim$counter$step, alpha_value = 1, color = "maternal", 
-                    main = ""){
+## General landscape plotting function
+plotLandscape <- function(x, y, sp, x_max, y_max){
   
-    # Initialize plot
-   plot(0, type = 'n', asp = 1,
-        pch = 19, xlab = "", ylab = "", las = 1, 
-        xlim = c(0, sim$params$x_max), ylim = c(0, sim$params$y_max),
-        main = main
-        )
-   
-    # Draw border of study area
-   rect(xleft = 0, ybottom = 0, xright = sim$params$x_max, 
-        ytop = sim$params$y_max, lty = 2)
-   
-    # Subset alive seedlings and adults
-   adults_alive <- sim$data[sim$registry[[step]][[1]], ]
-   seedlings_alive <- sim$data[sim$registry[[step]][[2]], ]
-   
-   if(color == "maternal"){
-   seedling_color <- seedlings_alive$color
-   adults_color <- adults_alive$color
-   }
-   
-   if(color == "paternal"){
-     seedling_color <- sim$data$color[seedlings_alive$id_father]
-     adults_color <- sim$data$color[adults_alive$id_father]
-   }
-   
-    # Plot seedlings, 
-    points(seedlings_alive$pos_x, seedlings_alive$pos_y, pch = 21, cex = .75,
-            bg = scales::alpha(seedling_color, alpha_value),
-            col = "grey4")
-   
-   # Plot adults
-    points(adults_alive$pos_x, adults_alive$pos_y, pch = 22, cex = 1.25, 
-           bg = scales::alpha(adults_color, 1),
-           col = "grey4")
+  plot(x, y, asp = 1, pch = 21, type = "n",
+       las = 1, xlab = "", ylab = "", xlim = c(0, x_max), ylim = c(0, y_max))
+  text(x, y, labels = as.character(sp))
+  rect(xleft = 0, ybottom = 0, xright = x_max, ytop = y_max, lty = 2)
 }
+
+
 
   # Plot summary data
 plotSummary <- function(sim){

@@ -1,16 +1,20 @@
 
 ## Initialize loci for beginning adults
-initLoci <- function(sim){
-    # Select just loci columns to fill in
-    # Could probably speed this up by not copying the data
-  fill <- sim$data[1:sim$params$n_adults_init, sim$params$loci_names]
-  fill <- apply(fill, 2, 
-        function(x) {
-          x <- sample(1:sim$params$n_alleles_per_loci, length(x), replace = TRUE)
-        })
-    # Set data
-  sim$data[1:sim$params$n_adults_init, sim$params$loci_names] <- fill
+initGenData <- function(params){
+  
+  col_names <- params$loci_names
+  gen_data <- data.frame(matrix(ncol = length(col_names), 
+                          nrow = params$n_ad))
+  colnames(gen_data) <- col_names
+
+  # Fill in loci
+  gen_data <- apply(gen_data, 2, 
+                   function(x) {
+                       x <- sample(1:params$n_alleles_per_loci, length(x), replace = TRUE)
+                        })
   cat("Loci for Adults initialized...\n")
+  
+  return(gen_data)
 }
 
 
@@ -20,57 +24,40 @@ makeLociNames <- function(n_loci){
 }
 
 
-# Function that takes genotypes of mom and dad and creates a new genotype
-# for offspring
-chooseGenotypesForOffspring <- function(sim){
-
-      # Find plants that don't have genotypes yet
-    where_na <- which(apply(sim$data[1:sim$counter$plant, 
-                                     sim$params$loci_names], 1, anyNA))
-    
-    if(length(where_na) == 0){
-      cat("All plants already have genotypes... exiting chooseGenotypes function\n")
-      return()
-    }
-  
-    offspring_ids <- sim$data$id[where_na]
-    
-      # Subset out ids of mothers and fathers
-    id_mother <- sim$data$id_mother[offspring_ids]
-    id_father <- sim$data$id_father[offspring_ids]
-    
-    # Choose one allele from each maternal and paternal genotype to pass on
-  mom_haploid <- t(apply(sim$data[id_mother, sim$params$loci_names], 1, 
-                       function(x) '['(x, chooseAllele(sim) )))
-  dad_haploid <- t(apply(sim$data[id_father, sim$params$loci_names], 1, 
-                       function(x) '['(x, chooseAllele(sim) )))
-  
-    # Fill in genotypes for offspring
-    # Could maybe speed up by not copying into 'fill' data frame first
-  fill <- sim$data[offspring_ids, sim$params$loci_names]
-  fill[, seq(1, sim$params$n_loci * 2, by = 2)] <- mom_haploid
-  fill[, seq(2, sim$params$n_loci * 2, by = 2)] <- dad_haploid
-  sim$data[offspring_ids, sim$params$loci_names] <- fill
-}
 
 # Choose one allele from each diploid loci to pass on to offspring
-# These are the indices to use for subseting
-chooseAllele <- function(sim){
-  seq(from = 1, to = sim$params$n_loci * 2, by = 2) +
-    sample(c(0,1), sim$params$n_loci/2, replace = TRUE)
+# Returns new offspring genotype
+chooseOffsprGen <- function(mom_gen, dad_gen, n_loci){
+  
+  base_indices <- seq(from = 1, to = n_loci * 2, by = 2)
+  mom_gen_indices <- base_indices + sample(c(0,1), n_loci, replace = TRUE)
+  dad_gen_indices <- base_indices + sample(c(0,1), n_loci, replace = TRUE)
+   
+  offspr_gen <- c(rbind(mom_gen[mom_gen_indices], dad_gen[dad_gen_indices]))
+   
+  return(offspr_gen)
+
 }
 
 ## Calculate allele frequencies
 # Returns a named numeric vector
-calcAlleleFreq <- function(alleles_1, alleles_2 = NULL){
+calcAlleleFreq <- function(alleles_1, alleles_2 = NULL, n_alleles_per_loci){
+  
+  ## Initialize blank al frequency table with all possible alleles
+  
+  freq <- rep(0, n_alleles_per_loci)
   
     # Get rid of NAs in case they are there
   alleles <- c(alleles_1, alleles_2)
   alleles <- na.omit(alleles)
   
+  
     # Sum number of instances per allele and divide by total length
-  freq <- as.numeric(table(alleles) / length(alleles))
-  names(freq) <- names(table(alleles))
+  allele_tab <- table(alleles)
+  ind_freq <- as.numeric(allele_tab)/ length(alleles)
+
+  freq[as.numeric(names(allele_tab))] <- ind_freq
+  
   return(freq)
 }
 
@@ -140,73 +127,6 @@ getDiploidGenotype <- function(data_subset, locus_name, sep = "-"){
 }
 
 
-## Calculate sp across steps
-
-runSpagediAnalysis <- function(sim, type, output_path){
-  
-    # Create output directory if it doesn't exist
-  if(!file.exists(output_path)){
-    dir.create(output_path)
-  }
-  
-  for(step in 1:sim$counter$step){
-    # Since there are no seedlings in first step.. skip loop
-    if(step == 1 & type == "seedling") {next} 
-    
-    # Need to add leading zeroes to step number so the files can be sorted nicely later
-    step_name <- formatC(step, width = 3, flag = "0")
-    
-    writeSpagedi(sim, type =  type, step = step, 
-                 file_name =  paste(output_path, type, "_", step_name,".txt", sep = ""), 
-                 dist_int = seq(10, sim$params$x_max, by = 10))
-    
-    runSpagedi(directory_path = output_path, 
-               input_file_name =  paste(type, "_", step_name,".txt", sep = ""),
-               output_file_name = paste(type, "_out_", step_name,".txt", sep = ""), 
-               categories_present = FALSE, perm = FALSE)
-    cat("Processing step...", step, "\n")
-  }
-}
-
-
-## Read through a bunch of spagedi output files and saves it into a list
-readSpagediAnalysis <- function(sim, type, output_path){
-  
-  output_files <- list.files(output_path, pattern = "out")
-  
-  if(length(output_files) == 0 ){
-    stop("Warning... no output files of that type found!\n")
-  }
-  
-  
-  step <- 1
-  
-  for(output_file in output_files){
-    
-   spag_list <-  makeSpagediList(paste(output_path, output_file, sep = ""))
-   
-   if(type == "adult"){
-     sim$spagedi_data_adults[[step]] <- spag_list
-   } else if(type == "seedling"){
-     if(step == 1) step <- 2
-     sim$spagedi_data_seedlings[[step]] <- spag_list
-   } else {
-     stop("Type not recognized..\n")
-   }
-   
-   step <- step + 1
-  }
-}
-
-addSpToSummary <- function(sim){
-  
-  for(step in 1:sim$counter$step){
-    sim$summary$sp_adults[step] <- mean(SpSummary(sim$spagedi_data_adults[[step]]))
-    
-    if(step == 1) next # Skip first step for seedlings
-    sim$summary$sp_seedlings[step] <- mean(SpSummary(sim$spagedi_data_seedlings[[step]]))
-  }
-}
 
 addNaeToSummary <- function(sim){
   for(step in 1:sim$counter$step){
@@ -219,47 +139,69 @@ addNaeToSummary <- function(sim){
 
 
 ## Calc Fij kinship coefficient from Loiselle et al. 1995
+# Between offspring and all eligible adults
 # Formula taken from Spagedi 1.4 manual
+## Returns mean Fij estimate to each adult
 
-calcFijPairwise <- function(sim, id1, id2, ref_gen, n){
+calcFij <- function(offspr_gen, gen_data_sub, ref_al_freq_sub, n_loci, n_alleles_per_loci,
+                    n_gene_copies){
   
-  denom = 0 # Initialize denominator and numerator
-  numer = 0
+  fij = NULL
   
-  gen1 <- sim$data[id1, sim$params$loci_names] # Subset out genotypes
-  gen2 <- sim$data[id2, sim$params$loci_names]
+  loci_seq <- seq(1, n_loci*2, 2) # Used to loop over loci
   
-    # Loop through loci
-  for(locus in seq(1, length(sim$params$loci_names), 2)){
-    
-    # Find reference allele frequencies
-    ref_freq <- calcAlleleFreq(ref_gen[, locus], ref_gen[, locus + 1])
-    
-    gen1_freq <- rep(0, length(ref_freq))
-    names(gen1_freq) <- names(ref_freq)
-    gen2_freq <- rep(0, length(ref_freq))
-    names(gen2_freq) <- names(ref_freq)
-    
-    gen1_freq_raw <- calcAlleleFreq(gen1[, locus], gen1[, locus + 1])
-    gen2_freq_raw <- calcAlleleFreq(gen2[, locus], gen2[, locus + 1])
-    
-    gen1_freq[names(gen1_freq_raw)] <- gen1_freq_raw
-    gen2_freq[names(gen2_freq_raw)] <- gen2_freq_raw
-  
-      for(allele in names(ref_freq)){
-          ## Numerator calcuations
-       numer_temp =  sum((gen1_freq[allele] - ref_freq[allele]) * (gen2_freq[allele] -
-          ref_freq[allele])) +sum(ref_freq[allele]*(1 - ref_freq[allele]) / (n - 1))
-      numer = numer + numer_temp
-        # Denominator calculations
-      denom_temp = ref_freq[allele] * (1 - ref_freq[allele])
-      denom = denom_temp + denom
-      }
-    
+  ## Calculate individual allele frequency for offspring
+  offspr_al_freq <- matrix(0, nrow = n_loci, ncol = n_alleles_per_loci)
+  col = 1
+  for(locus in 1:n_loci){
+    offspr_al_freq[locus, ] <- calcAlleleFreq(offspr_gen[col], offspr_gen[col+1], 
+                                              n_alleles_per_loci)
+    col = col+2
   }
-   fij = numer / denom 
+  
+  
+  ## Loop through adults
+  for(ad in 1:nrow(gen_data_sub)){
+    
+    ## Calculate individual allele frequency for adult
+    ad_al_freq <- matrix(0, nrow = n_loci, ncol = n_alleles_per_loci)
+    col = 1
+    for(locus in 1:n_loci){
+      ad_al_freq[locus, ] <- calcAlleleFreq(gen_data_sub[ad, col], 
+                                            gen_data_sub[ad, col+1], 
+                                                n_alleles_per_loci)
+      col = col+2
+    }
+    
+    
+    denom = 0 # Initialize denominator and numerator
+    numer = 0
+    # Loop through loci
+    for(locus in 1:n_loci){
+      for(allele in 1:n_alleles_per_loci){
+        
+        ## Numerator calcuations
+        numer_temp =  sum((offspr_al_freq[locus, allele] - ref_al_freq_sub[locus, allele]) *
+                            (ad_al_freq[locus, allele] - ref_al_freq_sub[locus, allele])) + 
+          sum(ref_al_freq_sub[locus, allele]*(1 - ref_al_freq_sub[locus, allele]) / (n_gene_copies - 1))
+        numer = numer + numer_temp
+        # Denominator calculations
+        denom_temp = ref_al_freq_sub[locus, allele] * (1 - ref_al_freq_sub[locus, allele])
+        denom = denom_temp + denom
+        
+      } # End allele loop
+    } # End locus loop
+    
+    fij[ad] = numer / denom ## Average across loci
+  
+  } # End adult loop
+  
    return(fij)
 }
+
+
+
+
 
 # Calculate average Fij across a population
 calcFijPopulation <- function(sim, ids){
@@ -279,6 +221,9 @@ calcFijPopulation <- function(sim, ids){
   
   return(mean(fijs))
 }
+
+
+
 
 
 calcNae <- function(sim, ids){

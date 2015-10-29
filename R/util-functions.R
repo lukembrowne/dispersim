@@ -9,6 +9,21 @@
   sqrt((x2 - x1)^2 + (y2 - y1)^2)
 }
 
+
+## Calculating distance on a torus from A to B
+## Code from Sedio and Ostling 2013 
+.distTorus = function(x1, x2, y1, y2, xmax, ymax) 	
+{
+  xdif = mapply(min, abs(x1-x2), xmax-abs(x1-x2))
+  ydif = mapply(min, abs(y1-y2), ymax-abs(y1-y2))
+  xydist=sqrt(xdif^2 + ydif^2)
+  return(xydist)
+} 	# end distfunc
+
+
+
+
+
 # Function to check that parameters are within expected ranges
 .checkParams <- function(params){
   
@@ -22,12 +37,12 @@
     cat("y_max must be greater than 0...\n")
     n_errors <- n_errors + 1
   }
-  if(params$boundary_setting != "unsuitable"){
+  if(!(params$boundary %in% c("torus","edge"))){
     cat("Unrecognized boundary setting...\n")
     n_errors <- n_errors + 1
   }
-  if(!.isPositiveInteger(params$n_adults_init)){
-    cat("n_adults_init must be positive integer...\n")
+  if(!.isPositiveInteger(params$n_ad)){
+    cat("n_ad must be positive integer...\n")
     n_errors <- n_errors + 1
   }
   if(!.isPositiveInteger(params$n_loci)){

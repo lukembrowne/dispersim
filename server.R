@@ -1,8 +1,6 @@
 library(shiny)
+library(pdist)
 library(dispersim)
-
-
-
 
 shinyServer(function(input, output) {
   
@@ -16,7 +14,7 @@ shinyServer(function(input, output) {
       # Expected number of steps and individuals
       expected_total_individuals = 100000,
       # Num of starting adults
-      n_adults_init = input$n_adults_init,
+      n_ad = input$n_ad,
       # Genetic parameters
       n_loci = input$n_loci,
       n_alleles_per_loci = input$n_alleles_per_loci,
@@ -38,7 +36,7 @@ shinyServer(function(input, output) {
   })
   
   
-  ## Histogram of nearest neighbors
+  ## Density plot of seed dispersal kernel
   output$seed_kernel_plot <- renderPlot({
     
     params <- params_reactive()
@@ -75,23 +73,30 @@ shinyServer(function(input, output) {
   })
   
   
-  run_simulation_reactive <- reactive({
+  
+  
+  initialize_simulation_reactive <- reactive({
     
-    input$run_new_simulation
+    input$initialize_new_simulation
     params <- params_reactive()
     
     sim <- initSim(params = params)
+    
     runSim(sim, steps = input$n_steps)
     
+    
     output$sim_landscape_plot <- renderPlot({
-      plotSim(sim)
+      plotSim(sim, color = input$plotting_color)
     })
     
   })
+
+    
+
   
   output$sim_summary_plot <- renderPlot({
-    input$update_plot
-    sim = run_simulation_reactive()
+    #input$update_plot
+    sim = initialize_simulation_reactive()
   })
   
   

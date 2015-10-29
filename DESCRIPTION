@@ -11,8 +11,6 @@ Description: This package simulates how pollen and seed dispersal affects the
 License: GPL (>= 2)
 Imports: 
   Rcpp (>= 0.11.3),
-  colorRamps,
-  scales,
-  pdist
+  scales
 LinkingTo: Rcpp
 Suggests: testthat
