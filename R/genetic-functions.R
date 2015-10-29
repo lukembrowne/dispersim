@@ -63,15 +63,15 @@ calcAlleleFreq <- function(alleles_1, alleles_2 = NULL, n_alleles_per_loci){
 
 ## Calculate unbiased gene diversity for one locus
 ## Formula from Nei 1987 that works well with both haploid and diploid data
-calcHe <- function(alleles_1, alleles_2 = NULL){
+calcHe <- function(alleles_1, alleles_2 = NULL, n_alleles_per_loci){
     
     # Used in correcting for bias in small sample sizes
     # Will set ploidy_multiplier to 2 if diploid genotypes are passed to function
-  ploidy_multiplier <- ifelse(length(alleles_2 > 0), 2, 1)
+  ploidy_multiplier <- 2
   
     # Calc number of samples and allele frequencie
   n_samples <- length(na.omit(alleles_1))
-  freq <- calcAlleleFreq(alleles_1, alleles_2)
+  freq <- calcAlleleFreq(alleles_1, alleles_2, n_alleles_per_loci)
   
     # Formula for unbiased gene diversity from Nei 1987
   he <- ((ploidy_multiplier * n_samples) / (ploidy_multiplier * n_samples - 1)) *
@@ -80,50 +80,20 @@ calcHe <- function(alleles_1, alleles_2 = NULL){
   return(he)
 }
 
-## Calculate He across loci, input is just genotypes of samples you want to analyze
-
-calcHeAvg <- function(sim, data_subset){
-        # Could speed up by setting this outside the function somewhere
-  loci_names_single <- sim$params$loci_names[grepl("_1", sim$params$loci_names)]
+## Calculate He across loci
+calcHeAvg <- function(gen_data, n_loci, n_alleles_per_loci){
   
-    # Init holder to hold he values for each locus
-  he_holder <- rep(NA, length(loci_names_single))
-    # Loop through and calc He for each locus, then average across loci
-  i <- 1
-  for(locus in loci_names_single){
-    dip_gen <- getDiploidGenotype(data_subset, locus_name = locus)
-    he_holder[i] <- calcHe(dip_gen)
-    i <- i + 1
+  # Could speed up by setting this outside the function somewhere
+  # Init holder to hold he values for each locus
+  he_holder <- NULL
+  
+  # Loop through and calc He for each locus, then average across loci
+  col = 1
+  for(locus in 1:n_loci){
+    he_holder[locus] <- calcHe(gen_data[, col], gen_data[, col+1], n_alleles_per_loci)
+    col = col+2
   }
   return(mean(he_holder))
-}
-
-
-# Function to return full diploid genotype given only the locus name
-# Give just the locus name without the underscore
-# Returns a vector of alleles
-getDiploidGenotype <- function(data_subset, locus_name, sep = "-"){
-  
-  if(!is.character(locus_name)){
-    stop("Locus name must be formatted as string")
-  }
-  
-  if(!locus_name %in% names(data_subset)){
-    stop("Name of locus not found in data")
-  }
-  
-  # Find column index for locus, and also next locus that contains 2nd half 
-  # of diploid data
-  first_col_index <- grep(locus_name, names(data_subset))
-  second_col_index <- first_col_index + 1
-  
-  if(length(first_col_index) > 1){
-    stop("More than one locus found with that name.. please be more specific")
-  }
-  
-  alleles <- c(data_subset[, first_col_index], data_subset[, second_col_index])
-    
-  return(alleles)
 }
 
 

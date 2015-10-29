@@ -10,56 +10,69 @@ plotLandscape <- function(x, y, sp, x_max, y_max){
 
 
 
-  # Plot summary data
-plotSummary <- function(sim){
-  
-  old_par <- par("mfrow", "mar")
-  
-    # Set colors
-  adult_col <- "grey4"
-  seedling_col <- "aquamarine3"
-  
-  par(mfrow = c(2,3), mar = c(3.1, 4, 2, 1))
-    # Plot adult population size
-  plot(sim$summary$generation, sim$summary$n_adults_alive, type = "l", lwd = 2,
-       las = 1, main = "Adults", ylab = "N", xlab = "", col = adult_col,
-       ylim = c(0, max(sim$summary$n_adults_alive, na.rm = TRUE)))
-  
-    # Plot seedling population size
-  plot(sim$summary$generation, sim$summary$n_seedlings_alive, type = "l", lwd = 2,
-       las = 1, main = "Seedlings", ylab = "", xlab = "Steps", col = seedling_col)
-  
-  # Plot landscape - maternal
-  plotSim(sim, color = "maternal", main = "Maternal")
-  
-    # Plot He
-  plot(sim$summary$generation, sim$summary$he_adults_alive, type = "l", lwd = 2,
-       las = 1, ylab = "He", xlab = "", main = "He",
-       ylim = c(0, 1), col = adult_col)
-  lines(sim$summary$generation, sim$summary$he_seedlings_alive, type = "l", lwd = 2,
-        col = seedling_col)
-  
-    # Plot Nae
-  plot(sim$summary$generation, sim$summary$nae_adults, type = "l", lwd = 2,
-            las = 1, ylim = c(0, sim$params$n_alleles_per_loci), 
-            ylab = "Nae", xlab = "", main = "Nae", col = adult_col)
-    lines(sim$summary$generation, sim$summary$nae_seedlings, type = "l", lwd = 2,
-             col = seedling_col)
-  
-    # Plot Sp over time
-#   plot(sim$summary$generation, sim$summary$sp_adults, type = "l", lwd = 2,
-#        las = 1, ylab = "Sp", xlab = "", main = "Sp",
-#        ylim = c(0, 0.4), col = adult_col)
-#   lines(sim$summary$generation, sim$summary$sp_seedlings, type = "l", lwd = 2,
-#         col = seedling_col)  
-  
-  plotSim(sim, color = "paternal", main = "Paternal")
-  
-  
-    # Reset par settings
-  on.exit(par(old_par))
-}
 
+## Function to summarize output of multiple iterations of the model
+summarizeSim <- function(sim_out, quiet = FALSE){
+  
+  par(mfrow = c(3,2), mar = c(3,5,2,2))
+  
+  summary <- list()
+  
+  
+  ## Species richness
+  
+  # Plot number of species over iterations
+  if(quiet == FALSE){
+    matplot(t(jitter(sim_out$sp_over_time)), type = "b", pch = 19, las = 1, 
+            ylab = "Species richness",
+            xlab = "Step",
+            xaxt = "n")
+    axis(side = 1, at = 1:ncol(sim_out$sp_over_time), 
+         labels = c(1, (sim_out$params$steps/(ncol(sim_out$sp_over_time)-1) * 
+                          1:(ncol(sim_out$sp_over_time)-1)) ))
+  }
+  
+  summary$sp <- apply(sim_out$sp_rep, 1, function(x) length(table(x))) 
+  
+  if(quiet == FALSE){
+    cat("Species richness summary:", mean(summary$sp),"+-", 
+        sd(summary$sp)/sqrt(sim_out$params$replicates), "\n")
+    boxplot(summary$sp, las = 1, ylab = "Species richness")
+    points(jitter(rep(1, length(summary$sp))), summary$sp, pch = 19)
+  }
+  
+  ## Expected heterozygosity over time
+  if(quiet == FALSE){
+    matplot(t(sim_out$he_over_time), type = "b", pch = 19, las = 1,
+            ylab = "He",
+            xlab = "Step", xaxt = "n")
+    axis(side = 1, at = 1:ncol(sim_out$he_over_time), 
+         labels = c(1,(sim_out$params$steps/(ncol(sim_out$sp_over_time)-1) * 
+                         1:(ncol(sim_out$sp_over_time)-1))))
+  }
+    
+    
+    ## Species abundance plots
+    
+    for(row in 1:nrow(sim_out$sp_rep)){
+      alpha = .55
+      if(row == 1){
+        barplot(sort(as.numeric(table(sim_out$sp_rep[row, ])), decreasing = TRUE),
+                ylab = "Abundance", las = 1, col = rgb(1, 0, 0, alpha),
+                xlim = c(0, max(apply(sim_out$sp_rep, 1, function(x) length(table(x))))+1))
+      }
+      barplot(sort(as.numeric(table(sim_out$sp_rep[row, ])), decreasing = TRUE),
+              ylab = "Abundance", las = 1, add = TRUE, 
+              col = rgb(runif(1,0,1), runif(1,0,1), runif(1,0,1), alpha),
+              main = "Species abundance plot")
+    }
+    
+  on.exit(par(mfrow = c(1,1), mar = c(5.1, 4.1, 4.1, 2.1)))
+  return(summary)
+  
+  }
+
+    
 
 
 # Plot dispersal kernels
