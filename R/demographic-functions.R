@@ -59,11 +59,19 @@ procSurvival <- function(offspr_x, offspr_y,
         
       } else if(gen_beta != 0){
        
-        genetic_effect <- calcFij(offspr_gen, gen_data[in_neighborhood_indices, , drop = FALSE],
+        genetic_effect <- calcFij(offspr_gen,
+                                  gen_data[in_neighborhood_indices, , drop = FALSE],
                                       ref_al_freq,
                                       n_loci = n_loci, 
                                       n_alleles_per_loci = n_alleles_per_loci,
                                       n_gene_copies = length(same_species_indices)*2)
+
+        ### CRASHES WHEN TRYING PASSING ENTIRE GEN_DATA FRAME.. not sure WHY
+#         calcFijPopCpp(offspr_gen = offspr_gen,
+#                       gen_data = gen_data[, , drop = FALSE],
+#                       ref_al_freq = ref_al_freq, n_loci = n_loci, 
+#                       n_alleles_per_loci = n_alleles_per_loci,
+#                       n_gene_copies = length(same_species_indices)*2)
         
         genetic_effect <- mean(genetic_effect)
         

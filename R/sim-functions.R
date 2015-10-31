@@ -369,16 +369,10 @@ for(replicate in 1:replicates){
           
           same_sp_indices <- which(sp == offspr_sp)
           gen_data_sub <- gen_data[same_sp_indices, , drop = FALSE]
-  
-          col = 1
-          ref_al_freq <- matrix(NA, nrow = n_loci, ncol = n_alleles_per_loci)
-          
-          for(locus in 1:n_loci){
-            ref_al_freq[locus, ] <- calcAlleleFreq(gen_data_sub[, col],
-                                                   gen_data_sub[, col+1],
-                                                   n_alleles_per_loci)
-            col = col+2
-          } # End locus loop
+
+          ref_al_freq <- calcAlleleFreqCpp(gen_data = gen_data_sub,
+                                            n_loci = n_loci,
+                                            n_alleles_per_loci = n_alleles_per_loci)
         } else {
           ref_al_freq = NULL
         }
