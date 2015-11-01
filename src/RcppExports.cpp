@@ -5,17 +5,48 @@
 
 using namespace Rcpp;
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP dispersim_rcpp_hello_world() {
+// calcFijPairwiseCpp
+std::vector<float> calcFijPairwiseCpp(NumericMatrix alfreq1, NumericMatrix alfreq2, NumericMatrix ref_al_freq, int n_loci, int n_alleles_per_loci, int n_gene_copies);
+RcppExport SEXP dispersim_calcFijPairwiseCpp(SEXP alfreq1SEXP, SEXP alfreq2SEXP, SEXP ref_al_freqSEXP, SEXP n_lociSEXP, SEXP n_alleles_per_lociSEXP, SEXP n_gene_copiesSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        List __result = rcpp_hello_world();
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type alfreq1(alfreq1SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type alfreq2(alfreq2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type ref_al_freq(ref_al_freqSEXP);
+    Rcpp::traits::input_parameter< int >::type n_loci(n_lociSEXP);
+    Rcpp::traits::input_parameter< int >::type n_alleles_per_loci(n_alleles_per_lociSEXP);
+    Rcpp::traits::input_parameter< int >::type n_gene_copies(n_gene_copiesSEXP);
+    __result = Rcpp::wrap(calcFijPairwiseCpp(alfreq1, alfreq2, ref_al_freq, n_loci, n_alleles_per_loci, n_gene_copies));
+    return __result;
+END_RCPP
+}
+// calcFijPopCpp
+std::vector<float> calcFijPopCpp(NumericMatrix gen_data, NumericMatrix ref_al_freq, NumericVector offspr_gen, int n_loci, int n_alleles_per_loci, int n_gene_copies);
+RcppExport SEXP dispersim_calcFijPopCpp(SEXP gen_dataSEXP, SEXP ref_al_freqSEXP, SEXP offspr_genSEXP, SEXP n_lociSEXP, SEXP n_alleles_per_lociSEXP, SEXP n_gene_copiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type gen_data(gen_dataSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type ref_al_freq(ref_al_freqSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type offspr_gen(offspr_genSEXP);
+    Rcpp::traits::input_parameter< int >::type n_loci(n_lociSEXP);
+    Rcpp::traits::input_parameter< int >::type n_alleles_per_loci(n_alleles_per_lociSEXP);
+    Rcpp::traits::input_parameter< int >::type n_gene_copies(n_gene_copiesSEXP);
+    __result = Rcpp::wrap(calcFijPopCpp(gen_data, ref_al_freq, offspr_gen, n_loci, n_alleles_per_loci, n_gene_copies));
+    return __result;
+END_RCPP
+}
+// calcAlleleFreqCpp
+NumericMatrix calcAlleleFreqCpp(NumericMatrix gen_data, int n_loci, int n_alleles_per_loci);
+RcppExport SEXP dispersim_calcAlleleFreqCpp(SEXP gen_dataSEXP, SEXP n_lociSEXP, SEXP n_alleles_per_lociSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type gen_data(gen_dataSEXP);
+    Rcpp::traits::input_parameter< int >::type n_loci(n_lociSEXP);
+    Rcpp::traits::input_parameter< int >::type n_alleles_per_loci(n_alleles_per_lociSEXP);
+    __result = Rcpp::wrap(calcAlleleFreqCpp(gen_data, n_loci, n_alleles_per_loci));
+    return __result;
 END_RCPP
 }

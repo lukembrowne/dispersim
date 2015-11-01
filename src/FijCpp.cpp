@@ -51,7 +51,8 @@ std::vector<float> calcFijPairwiseCpp(NumericMatrix alfreq1,
                           (alfreq2(locus, allele) - ref_al_freq(locus, allele)) +
           (ref_al_freq(locus, allele)*(1 - ref_al_freq(locus, allele))) / (n_gene_copies- 1);
         
-        denom[locus] += ref_al_freq(locus, allele) * (1 - ref_al_freq(locus, allele));
+        denom[locus] += ref_al_freq(locus, allele) * (1 - ref_al_freq(locus, allele)) +
+          0.000000000000001; // Have to add really small value or else it will fail when ref al freq = 1
         
       } // End allele loop
     
@@ -158,9 +159,7 @@ for(int ind = 1; ind < (n_ad + 1); ++ind){
   }
   
   fij[ind-1] = fij[ind-1] / n_loci;
-  
-  Rcout << "At end " << ind << "\n";
-  
+
  } // End Adult loop
   
 return(fij);

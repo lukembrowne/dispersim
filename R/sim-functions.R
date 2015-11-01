@@ -151,7 +151,10 @@ for(replicate in 1:replicates){
          he_ind <- 1
          species_list <- names(sp_abund[sp_abund > min_pop])
          for(species in species_list){
-           he_sp[he_ind] <- calcHeAvg(gen_data[sp == species, ], n_loci, n_alleles_per_loci)
+           gen_sub <- gen_data[sp == species, ]
+           n_ind <- nrow(gen_sub)
+           al_freq <- calcAlleleFreqCpp(gen_sub, n_loci, n_alleles_per_loci)
+           he_sp[he_ind] <- calcHe(al_freq = al_freq, n_ind = n_ind)
            he_ind <- he_ind + 1
          }
          
@@ -366,7 +369,7 @@ for(replicate in 1:replicates){
         # Could probably speed up with RCPP
     
         if(gen_beta != 0){
-          
+          ## Could move this into procSurvival and only calculate if in bounds, etc
           same_sp_indices <- which(sp == offspr_sp)
           gen_data_sub <- gen_data[same_sp_indices, , drop = FALSE]
 
@@ -418,8 +421,10 @@ for(replicate in 1:replicates){
            counter$pollen_immi = counter$pollen_immi + 1
           }
           
-          if(self_prob < selfing_rate){
+          if(breed_mode == "outbreeding"){
+             if(self_prob < selfing_rate){
             counter$selfing = counter$selfing + 1
+             }
           }
           
         } # End offspring survival IF

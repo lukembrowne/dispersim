@@ -39,61 +39,16 @@ chooseOffsprGen <- function(mom_gen, dad_gen, n_loci){
 
 }
 
-## Calculate allele frequencies
-# Returns a named numeric vector
-calcAlleleFreq <- function(alleles_1, alleles_2 = NULL, n_alleles_per_loci){
-  
-  ## Initialize blank al frequency table with all possible alleles
-  
-  freq <- rep(0, n_alleles_per_loci)
-  
-    # Get rid of NAs in case they are there
-  alleles <- c(alleles_1, alleles_2)
-  alleles <- na.omit(alleles)
-  
-  
-    # Sum number of instances per allele and divide by total length
-  allele_tab <- table(alleles)
-  ind_freq <- as.numeric(allele_tab)/ length(alleles)
-
-  freq[as.numeric(names(allele_tab))] <- ind_freq
-  
-  return(freq)
-}
 
 ## Calculate unbiased gene diversity for one locus
 ## Formula from Nei 1987 that works well with both haploid and diploid data
-calcHe <- function(alleles_1, alleles_2 = NULL, n_alleles_per_loci){
+## Returns mean He across all loci
+calcHe <- function(al_freq, n_ind){
     
-    # Used in correcting for bias in small sample sizes
-    # Will set ploidy_multiplier to 2 if diploid genotypes are passed to function
-  ploidy_multiplier <- 2
-  
-    # Calc number of samples and allele frequencie
-  n_samples <- length(na.omit(alleles_1))
-  freq <- calcAlleleFreq(alleles_1, alleles_2, n_alleles_per_loci)
-  
     # Formula for unbiased gene diversity from Nei 1987
-  he <- ((ploidy_multiplier * n_samples) / (ploidy_multiplier * n_samples - 1)) *
-    (1 - sum(freq^2))
-  
-  return(he)
-}
+  he <- apply(al_freq, 1, function(x) ((2 * n_ind) / (2 * n_ind - 1)) * (1 - sum(x^2)))
 
-## Calculate He across loci
-calcHeAvg <- function(gen_data, n_loci, n_alleles_per_loci){
-  
-  # Could speed up by setting this outside the function somewhere
-  # Init holder to hold he values for each locus
-  he_holder <- NULL
-  
-  # Loop through and calc He for each locus, then average across loci
-  col = 1
-  for(locus in 1:n_loci){
-    he_holder[locus] <- calcHe(gen_data[, col], gen_data[, col+1], n_alleles_per_loci)
-    col = col+2
-  }
-  return(mean(he_holder))
+    return(sum(he)/length(he))
 }
 
 
@@ -106,93 +61,6 @@ addNaeToSummary <- function(sim){
     sim$summary$nae_seedlings[step] <- extractDivParam(sim$spagedi_data_seedlings[[step]], "nae")[1, 1]
   }
 }
-
-
-## Calc Fij kinship coefficient from Loiselle et al. 1995
-# Between offspring and all eligible adults
-# Formula taken from Spagedi 1.4 manual
-## Returns mean Fij estimate to each adult
-
-calcFij <- function(offspr_gen, gen_data_sub, ref_al_freq_sub, n_loci, n_alleles_per_loci,
-                    n_gene_copies){
-  
-  fij = NULL
-  
-  loci_seq <- seq(1, n_loci*2, 2) # Used to loop over loci
-  
-  ## Calculate individual allele frequency for offspring
-  offspr_al_freq <- matrix(0, nrow = n_loci, ncol = n_alleles_per_loci)
-  col = 1
-  for(locus in 1:n_loci){
-    offspr_al_freq[locus, ] <- calcAlleleFreq(offspr_gen[col], offspr_gen[col+1], 
-                                              n_alleles_per_loci)
-    col = col+2
-  }
-  
-  
-  ## Loop through adults
-  for(ad in 1:nrow(gen_data_sub)){
-    
-    ## Calculate individual allele frequency for adult
-    ad_al_freq <- matrix(0, nrow = n_loci, ncol = n_alleles_per_loci)
-    col = 1
-    for(locus in 1:n_loci){
-      ad_al_freq[locus, ] <- calcAlleleFreq(gen_data_sub[ad, col], 
-                                            gen_data_sub[ad, col+1], 
-                                                n_alleles_per_loci)
-      col = col+2
-    }
-    
-    
-    denom = 0 # Initialize denominator and numerator
-    numer = 0
-    # Loop through loci
-    for(locus in 1:n_loci){
-      for(allele in 1:n_alleles_per_loci){
-        
-        ## Numerator calcuations
-        numer_temp =  sum((offspr_al_freq[locus, allele] - ref_al_freq_sub[locus, allele]) *
-                            (ad_al_freq[locus, allele] - ref_al_freq_sub[locus, allele])) + 
-          sum(ref_al_freq_sub[locus, allele]*(1 - ref_al_freq_sub[locus, allele]) / (n_gene_copies - 1))
-        numer = numer + numer_temp
-        # Denominator calculations
-        denom_temp = ref_al_freq_sub[locus, allele] * (1 - ref_al_freq_sub[locus, allele])
-        denom = denom_temp + denom
-        
-      } # End allele loop
-    } # End locus loop
-    
-    fij[ad] = numer / denom ## Average across loci
-  
-  } # End adult loop
-  
-   return(fij)
-}
-
-
-
-
-
-# Calculate average Fij across a population
-calcFijPopulation <- function(sim, ids){
-  
-  ref_gen <- sim$data[ids, sim$params$loci_names] # Calculate
-  n_gene_copies <- length(ids) * 2  # Gene copies (* 2 for diploid)
-  
-  
-  id_combos <- combn(ids, 2)
-  fijs <- rep(NA, dim(id_combos)[2])
-  i <- 0
-  for(column in 1:dim(id_combos)[2]){
-    fijs[column] <- calcFijPairwise(sim, id1 = id_combos[1, column], 
-                                    id2 = id_combos[2, column],
-                                     ref_gen = ref_gen, n = n_gene_copies)
-  }
-  
-  return(mean(fijs))
-}
-
-
 
 
 
